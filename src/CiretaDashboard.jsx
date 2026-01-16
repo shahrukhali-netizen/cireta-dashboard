@@ -17,11 +17,11 @@ const EMAILS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_I
 const MENU_ITEMS = {
   analytics: [
     { id: 'overview', label: 'Traffic Overview', icon: 'grid' },
-    { id: 'sources', label: 'Traffic Sources', icon: 'link' },
     { id: 'website', label: 'Activity Stats', icon: 'chart' },
     { id: 'events', label: 'Custom Events', icon: 'zap' },
     { id: 'demographics', label: 'Demographics', icon: 'users' },
     { id: 'countries', label: 'Countries', icon: 'globe' },
+    { id: 'sources', label: 'Traffic Sources', icon: 'link' },
   ],
   socials: [
     { id: 'social-overview', label: 'Social Overview', icon: 'share' },
@@ -60,6 +60,7 @@ const CiretaDashboard = () => {
   const [gaPageData, setGaPageData] = useState([]);
   const [gaEventData, setGaEventData] = useState([]);
   const [gaSourceData, setGaSourceData] = useState({ channels: [], sources: [], mediums: [] });
+  const [gaDemographicsData, setGaDemographicsData] = useState({ browsers: [], operatingSystems: [], screenResolutions: [], languages: [] });
 
   // Sheets Data states (for Socials & Emails)
   const [coldEmailData, setColdEmailData] = useState([]);
@@ -108,7 +109,7 @@ const CiretaDashboard = () => {
       const params = `?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
 
       // Fetch all GA data in parallel
-      const [overviewRes, monthlyRes, countriesRes, citiesRes, devicesRes, pagesRes, eventsRes, sourcesRes, healthRes] = await Promise.all([
+      const [overviewRes, monthlyRes, countriesRes, citiesRes, devicesRes, pagesRes, eventsRes, sourcesRes, demographicsRes, healthRes] = await Promise.all([
         fetch(`${API_BASE}/ga/overview${params}`),
         fetch(`${API_BASE}/ga/monthly${params}`),
         fetch(`${API_BASE}/ga/countries${params}`),
@@ -117,10 +118,11 @@ const CiretaDashboard = () => {
         fetch(`${API_BASE}/ga/pages${params}`),
         fetch(`${API_BASE}/ga/events${params}`),
         fetch(`${API_BASE}/ga/sources${params}`),
+        fetch(`${API_BASE}/ga/demographics${params}`),
         fetch(`${API_BASE}/health`),
       ]);
 
-      const [overview, monthly, countries, cities, devices, pages, events, sources, health] = await Promise.all([
+      const [overview, monthly, countries, cities, devices, pages, events, sources, demographics, health] = await Promise.all([
         overviewRes.json(),
         monthlyRes.json(),
         countriesRes.json(),
@@ -129,6 +131,7 @@ const CiretaDashboard = () => {
         pagesRes.json(),
         eventsRes.json(),
         sourcesRes.json(),
+        demographicsRes.json(),
         healthRes.json(),
       ]);
 
@@ -140,6 +143,7 @@ const CiretaDashboard = () => {
       setGaPageData(pages);
       setGaEventData(events);
       setGaSourceData(sources);
+      setGaDemographicsData(demographics);
       setGaConnected(health.gaConnected);
       setLastUpdated(new Date());
     } catch (err) {
@@ -677,162 +681,6 @@ const CiretaDashboard = () => {
             </div>
           )}
 
-          {/* Traffic Sources Tab */}
-          {activeTab === 'sources' && gaSourceData && (
-            <div className="space-y-6">
-              {/* Channel Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {gaSourceData.channels.slice(0, 6).map((channel, idx) => (
-                  <div key={idx} className="rounded-xl p-4 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-all duration-300">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: channel.fill }}></div>
-                      <p className="text-xs font-medium text-gray-500 truncate">{channel.channel}</p>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-800">{channel.users.toLocaleString()}</p>
-                    <p className="text-xs text-gray-400">users</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Channel Distribution Pie Chart */}
-                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
-                    Traffic by Channel
-                  </h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={gaSourceData.channels}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={3}
-                        dataKey="users"
-                        nameKey="channel"
-                        animationDuration={1500}
-                        animationEasing="ease-out"
-                      >
-                        {gaSourceData.channels.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                        <LabelList dataKey="channel" position="outside" fill="#374151" fontSize={11} fontWeight="600" />
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-                        formatter={(value) => [value.toLocaleString(), 'Users']}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Channel Bar Chart */}
-                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
-                    Users vs Sessions by Channel
-                  </h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={gaSourceData.channels} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11, fontWeight: 600 }} />
-                      <YAxis dataKey="channel" type="category" width={100} tick={{ fill: '#374151', fontSize: 11, fontWeight: 600 }} />
-                      <Tooltip
-                        contentStyle={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-                        formatter={(value) => value.toLocaleString()}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
-                      <Bar dataKey="users" name="Users" fill="#13636f" radius={[0, 4, 4, 0]} animationDuration={1200} animationEasing="ease-out" />
-                      <Bar dataKey="sessions" name="Sessions" fill="#3ab0c4" radius={[0, 4, 4, 0]} animationDuration={1200} animationBegin={200} animationEasing="ease-out" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Top Sources Table */}
-                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
-                    Top Sources
-                  </h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 font-semibold text-gray-500 text-sm">Source</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Users</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Sessions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {gaSourceData.sources.map((source, idx) => {
-                          const maxUsers = Math.max(...gaSourceData.sources.map(s => s.users));
-                          const percentage = (source.users / maxUsers) * 100;
-                          return (
-                            <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                              <td className="py-3 px-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="relative w-full max-w-[120px]">
-                                    <div className="absolute inset-0 bg-[#13636f]/10 rounded" style={{ width: `${percentage}%` }}></div>
-                                    <span className="relative font-medium text-gray-800 text-sm">{source.source}</span>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-3 px-4 text-right font-semibold text-[#13636f]">{source.users.toLocaleString()}</td>
-                              <td className="py-3 px-4 text-right text-gray-600">{source.sessions.toLocaleString()}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Top Mediums Table */}
-                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
-                    Traffic by Medium
-                  </h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 font-semibold text-gray-500 text-sm">Medium</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Users</th>
-                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Sessions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {gaSourceData.mediums.map((medium, idx) => {
-                          const maxUsers = Math.max(...gaSourceData.mediums.map(m => m.users));
-                          const percentage = (medium.users / maxUsers) * 100;
-                          return (
-                            <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                              <td className="py-3 px-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="relative w-full max-w-[120px]">
-                                    <div className="absolute inset-0 bg-[#3ab0c4]/10 rounded" style={{ width: `${percentage}%` }}></div>
-                                    <span className="relative font-medium text-gray-800 text-sm">{medium.medium}</span>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-3 px-4 text-right font-semibold text-[#3ab0c4]">{medium.users.toLocaleString()}</td>
-                              <td className="py-3 px-4 text-right text-gray-600">{medium.sessions.toLocaleString()}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Activity Stats (Website) Tab */}
           {activeTab === 'website' && gaOverview && (
             <div className="space-y-6">
@@ -1116,56 +964,157 @@ const CiretaDashboard = () => {
           {/* Demographics Tab */}
           {activeTab === 'demographics' && gaDeviceData.length > 0 && (
             <div className="space-y-6">
+              {/* Device & Browser Row */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
+                {/* Device Distribution */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
                   <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
                     <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
                     Device Distribution
                   </h3>
-                  <div className="h-[350px]">
+                  <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={gaDeviceData}
                           cx="50%"
                           cy="50%"
-                          outerRadius={120}
-                          innerRadius={50}
+                          outerRadius={100}
+                          innerRadius={45}
                           paddingAngle={4}
                           dataKey="users"
-                          label={({ device, percent }) => `${device}: ${(percent * 100).toFixed(1)}%`}
-                          labelLine={{ stroke: '#6b7280', strokeWidth: 2 }}
                           animationDuration={1500}
-                          animationBegin={0}
                           animationEasing="ease-out"
                         >
                           {gaDeviceData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="#fff" strokeWidth={3} />
+                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="#fff" strokeWidth={2} />
                           ))}
                         </Pie>
-                        <Tooltip contentStyle={tooltipStyle} />
-                        <Legend wrapperStyle={{ fontWeight: 600 }} />
+                        <Tooltip contentStyle={tooltipStyle} formatter={(value) => value.toLocaleString()} />
+                        <Legend wrapperStyle={{ fontWeight: 600, fontSize: '12px' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                </div>
-
-                <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-gradient-to-b from-[#3ab0c4] to-[#d4af37] rounded-full"></span>
-                    Device Stats
-                  </h3>
-                  <div className="space-y-4">
+                  <div className="mt-4 space-y-2">
                     {gaDeviceData.map((device, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all hover:scale-[1.02]">
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: device.fill }}></div>
-                          <span className="font-semibold text-gray-800 capitalize">{device.device}</span>
+                      <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: device.fill }}></div>
+                          <span className="text-sm font-medium text-gray-700 capitalize">{device.device}</span>
                         </div>
-                        <span className="text-xl font-bold text-[#13636f]">{device.users.toLocaleString()}</span>
+                        <span className="text-sm font-bold text-[#13636f]">{device.users.toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Browser Distribution */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#3ab0c4] to-[#5cc4d4] rounded-full"></span>
+                    Browser Distribution
+                  </h3>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={gaDemographicsData.browsers}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          innerRadius={45}
+                          paddingAngle={4}
+                          dataKey="users"
+                          animationDuration={1500}
+                          animationBegin={200}
+                          animationEasing="ease-out"
+                        >
+                          {gaDemographicsData.browsers.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="#fff" strokeWidth={2} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={tooltipStyle} formatter={(value) => value.toLocaleString()} />
+                        <Legend wrapperStyle={{ fontWeight: 600, fontSize: '12px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {gaDemographicsData.browsers.slice(0, 5).map((browser, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: browser.fill }}></div>
+                          <span className="text-sm font-medium text-gray-700">{browser.browser}</span>
+                        </div>
+                        <span className="text-sm font-bold text-[#3ab0c4]">{browser.users.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* OS & Screen Resolution Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Operating System */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#1a7a88] rounded-full"></span>
+                    Operating Systems
+                  </h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={gaDemographicsData.operatingSystems} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11, fontWeight: 600 }} />
+                      <YAxis dataKey="os" type="category" width={80} tick={{ fill: '#374151', fontSize: 11, fontWeight: 600 }} />
+                      <Tooltip contentStyle={tooltipStyle} formatter={(value) => value.toLocaleString()} />
+                      <Bar dataKey="users" name="Users" radius={[0, 6, 6, 0]} animationDuration={1200} animationEasing="ease-out">
+                        {gaDemographicsData.operatingSystems.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Screen Resolutions */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#5cc4d4] to-[#7dd3e0] rounded-full"></span>
+                    Screen Resolutions
+                  </h3>
+                  <div className="space-y-3">
+                    {gaDemographicsData.screenResolutions.slice(0, 6).map((res, idx) => {
+                      const maxUsers = Math.max(...gaDemographicsData.screenResolutions.map(r => r.users));
+                      const percentage = (res.users / maxUsers) * 100;
+                      return (
+                        <div key={idx} className="relative">
+                          <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 relative overflow-hidden">
+                            <div
+                              className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-[#13636f]/20 to-[#3ab0c4]/20 transition-all duration-500"
+                              style={{ width: `${percentage}%` }}
+                            ></div>
+                            <span className="text-sm font-medium text-gray-700 relative z-10">{res.resolution}</span>
+                            <span className="text-sm font-bold text-[#13636f] relative z-10">{res.users.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Languages */}
+              <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                  <span className="w-1 h-6 bg-gradient-to-b from-[#d4af37] to-[#e5c158] rounded-full"></span>
+                  User Languages
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {gaDemographicsData.languages.slice(0, 6).map((lang, idx) => (
+                    <div key={idx} className="rounded-xl p-4 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-[#13636f]/5 hover:to-[#3ab0c4]/5 transition-all duration-300 text-center">
+                      <p className="text-lg font-bold text-[#13636f]">{lang.users.toLocaleString()}</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">{lang.language}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -1224,6 +1173,162 @@ const CiretaDashboard = () => {
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Traffic Sources Tab */}
+          {activeTab === 'sources' && gaSourceData && (
+            <div className="space-y-6">
+              {/* Channel Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {gaSourceData.channels.slice(0, 6).map((channel, idx) => (
+                  <div key={idx} className="rounded-xl p-4 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-all duration-300">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: channel.fill }}></div>
+                      <p className="text-xs font-medium text-gray-500 truncate">{channel.channel}</p>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-800">{channel.users.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">users</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Channel Distribution Pie Chart */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Traffic by Channel
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={gaSourceData.channels}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={3}
+                        dataKey="users"
+                        nameKey="channel"
+                        animationDuration={1500}
+                        animationEasing="ease-out"
+                      >
+                        {gaSourceData.channels.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                        <LabelList dataKey="channel" position="outside" fill="#374151" fontSize={11} fontWeight="600" />
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                        formatter={(value) => [value.toLocaleString(), 'Users']}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Channel Bar Chart */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Users vs Sessions by Channel
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={gaSourceData.channels} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11, fontWeight: 600 }} />
+                      <YAxis dataKey="channel" type="category" width={100} tick={{ fill: '#374151', fontSize: 11, fontWeight: 600 }} />
+                      <Tooltip
+                        contentStyle={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                        formatter={(value) => value.toLocaleString()}
+                      />
+                      <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
+                      <Bar dataKey="users" name="Users" fill="#13636f" radius={[0, 4, 4, 0]} animationDuration={1200} animationEasing="ease-out" />
+                      <Bar dataKey="sessions" name="Sessions" fill="#3ab0c4" radius={[0, 4, 4, 0]} animationDuration={1200} animationBegin={200} animationEasing="ease-out" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Top Sources Table */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Top Sources
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-semibold text-gray-500 text-sm">Source</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Users</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Sessions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gaSourceData.sources.map((source, idx) => {
+                          const maxUsers = Math.max(...gaSourceData.sources.map(s => s.users));
+                          const percentage = (source.users / maxUsers) * 100;
+                          return (
+                            <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative w-full max-w-[120px]">
+                                    <div className="absolute inset-0 bg-[#13636f]/10 rounded" style={{ width: `${percentage}%` }}></div>
+                                    <span className="relative font-medium text-gray-800 text-sm">{source.source}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-right font-semibold text-[#13636f]">{source.users.toLocaleString()}</td>
+                              <td className="py-3 px-4 text-right text-gray-600">{source.sessions.toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Top Mediums Table */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Traffic by Medium
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-semibold text-gray-500 text-sm">Medium</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Users</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Sessions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gaSourceData.mediums.map((medium, idx) => {
+                          const maxUsers = Math.max(...gaSourceData.mediums.map(m => m.users));
+                          const percentage = (medium.users / maxUsers) * 100;
+                          return (
+                            <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative w-full max-w-[120px]">
+                                    <div className="absolute inset-0 bg-[#3ab0c4]/10 rounded" style={{ width: `${percentage}%` }}></div>
+                                    <span className="relative font-medium text-gray-800 text-sm">{medium.medium}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-right font-semibold text-[#3ab0c4]">{medium.users.toLocaleString()}</td>
+                              <td className="py-3 px-4 text-right text-gray-600">{medium.sessions.toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
