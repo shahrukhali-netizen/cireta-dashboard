@@ -367,7 +367,7 @@ const CiretaDashboard = () => {
 
   // Main dashboard (no login required)
   return (
-    <div className="min-h-screen bg-[#0f1729] flex">
+    <div className="min-h-screen bg-[#f8fafc] flex">
       {/* Sidebar */}
       <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-[#1a2236] border-r border-gray-800 flex flex-col transition-all duration-300 fixed h-full z-40`}>
         {/* Logo */}
@@ -465,35 +465,35 @@ const CiretaDashboard = () => {
       {/* Main Content */}
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} transition-all duration-300`}>
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-[#0f1729] border-b border-gray-800 px-6 py-4">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
           <div className="flex items-center justify-between">
             {/* Project Name */}
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-2 bg-[#1a2236] rounded-lg border border-gray-700">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                <svg className="w-5 h-5 text-[#13636f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-                <span className="text-white text-sm font-medium">{projectName}</span>
+                <span className="text-gray-800 text-sm font-medium">{projectName}</span>
               </div>
             </div>
 
             {/* Date Filter & Refresh */}
             <div className="flex items-center gap-3">
               {/* Date Range */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-[#1a2236] rounded-lg border border-gray-700">
-                <Icon name="calendar" className="w-4 h-4 text-gray-400" />
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                <Icon name="calendar" className="w-4 h-4 text-[#13636f]" />
                 <input
                   type="date"
                   value={dateRange.startDate}
                   onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-                  className="bg-transparent text-white text-sm focus:outline-none"
+                  className="bg-transparent text-gray-700 text-sm focus:outline-none"
                 />
-                <span className="text-gray-500">-</span>
+                <span className="text-gray-400">-</span>
                 <input
                   type="date"
                   value={dateRange.endDate}
                   onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-                  className="bg-transparent text-white text-sm focus:outline-none"
+                  className="bg-transparent text-gray-700 text-sm focus:outline-none"
                 />
               </div>
 
@@ -501,7 +501,7 @@ const CiretaDashboard = () => {
               <button
                 onClick={handleRefresh}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-[#13636f] text-white rounded-lg font-medium hover:bg-[#1a7a88] transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-[#13636f] text-white rounded-lg font-medium hover:bg-[#1a7a88] transition-all disabled:opacity-50 shadow-sm"
               >
                 <Icon name="refresh" className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 Refresh Data
@@ -514,7 +514,7 @@ const CiretaDashboard = () => {
         <div className="p-6">
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-4 rounded-lg bg-red-900/50 border border-red-700 text-red-200">
+            <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
               {error}
             </div>
           )}
@@ -523,8 +523,8 @@ const CiretaDashboard = () => {
           {loading && !gaOverview && (
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
-                <div className="w-12 h-12 border-4 border-gray-700 border-t-[#13636f] rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-400">Loading analytics data...</p>
+                <div className="w-12 h-12 border-4 border-gray-200 border-t-[#13636f] rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading analytics data...</p>
               </div>
             </div>
           )}
@@ -1283,9 +1283,9 @@ const CiretaDashboard = () => {
           )}
 
           {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-gray-700 flex items-center justify-between">
+          <div className="mt-8 pt-6 border-t border-gray-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src="/cireta-logo.svg" alt="Cireta" className="h-5 opacity-60" />
+              <img src="/cireta-logo.svg" alt="Cireta" className="h-5 opacity-70" />
               <span className="text-sm text-gray-500">Analytics Dashboard</span>
             </div>
             <div className="text-sm text-gray-500">
