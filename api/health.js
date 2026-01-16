@@ -23,3 +23,4 @@ export default function handler(req, res) {
     timestamp: new Date().toISOString()
   });
 }
+// v2
