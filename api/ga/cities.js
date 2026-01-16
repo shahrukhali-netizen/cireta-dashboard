@@ -1,6 +1,6 @@
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 
-const PROPERTY_ID = '461877498';
+const PROPERTY_ID = '472271698';
 
 function getAnalyticsClient() {
   if (process.env.GA_CLIENT_EMAIL && process.env.GA_PRIVATE_KEY) {
