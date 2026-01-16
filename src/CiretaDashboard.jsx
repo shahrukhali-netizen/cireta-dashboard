@@ -45,10 +45,14 @@ const CiretaDashboard = () => {
   // Project name
   const projectName = 'Cireta Website';
 
-  // Date filter state
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
+  // Date filter state - default to 1st of current month to today
+  const [dateRange, setDateRange] = useState(() => {
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return {
+      startDate: firstOfMonth.toISOString().split('T')[0],
+      endDate: now.toISOString().split('T')[0],
+    };
   });
 
   // GA Data states
