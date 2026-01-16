@@ -17,6 +17,7 @@ const EMAILS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_I
 const MENU_ITEMS = {
   analytics: [
     { id: 'overview', label: 'Traffic Overview', icon: 'grid' },
+    { id: 'sources', label: 'Traffic Sources', icon: 'link' },
     { id: 'website', label: 'Activity Stats', icon: 'chart' },
     { id: 'events', label: 'Custom Events', icon: 'zap' },
     { id: 'demographics', label: 'Demographics', icon: 'users' },
@@ -58,6 +59,7 @@ const CiretaDashboard = () => {
   const [gaDeviceData, setGaDeviceData] = useState([]);
   const [gaPageData, setGaPageData] = useState([]);
   const [gaEventData, setGaEventData] = useState([]);
+  const [gaSourceData, setGaSourceData] = useState({ channels: [], sources: [], mediums: [] });
 
   // Sheets Data states (for Socials & Emails)
   const [coldEmailData, setColdEmailData] = useState([]);
@@ -106,7 +108,7 @@ const CiretaDashboard = () => {
       const params = `?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
 
       // Fetch all GA data in parallel
-      const [overviewRes, monthlyRes, countriesRes, citiesRes, devicesRes, pagesRes, eventsRes, healthRes] = await Promise.all([
+      const [overviewRes, monthlyRes, countriesRes, citiesRes, devicesRes, pagesRes, eventsRes, sourcesRes, healthRes] = await Promise.all([
         fetch(`${API_BASE}/ga/overview${params}`),
         fetch(`${API_BASE}/ga/monthly${params}`),
         fetch(`${API_BASE}/ga/countries${params}`),
@@ -114,10 +116,11 @@ const CiretaDashboard = () => {
         fetch(`${API_BASE}/ga/devices${params}`),
         fetch(`${API_BASE}/ga/pages${params}`),
         fetch(`${API_BASE}/ga/events${params}`),
+        fetch(`${API_BASE}/ga/sources${params}`),
         fetch(`${API_BASE}/health`),
       ]);
 
-      const [overview, monthly, countries, cities, devices, pages, events, health] = await Promise.all([
+      const [overview, monthly, countries, cities, devices, pages, events, sources, health] = await Promise.all([
         overviewRes.json(),
         monthlyRes.json(),
         countriesRes.json(),
@@ -125,6 +128,7 @@ const CiretaDashboard = () => {
         devicesRes.json(),
         pagesRes.json(),
         eventsRes.json(),
+        sourcesRes.json(),
         healthRes.json(),
       ]);
 
@@ -135,6 +139,7 @@ const CiretaDashboard = () => {
       setGaDeviceData(devices);
       setGaPageData(pages);
       setGaEventData(events);
+      setGaSourceData(sources);
       setGaConnected(health.gaConnected);
       setLastUpdated(new Date());
     } catch (err) {
@@ -315,6 +320,12 @@ const CiretaDashboard = () => {
     fetchSheetsData();
   };
 
+  // Handle tab change with scroll to top
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Calculate totals
   const totalLinkedInImpressions = linkedInData.reduce((sum, d) => sum + d.impressions, 0);
   const totalXImpressions = xData.reduce((sum, d) => sum + d.impressions, 0);
@@ -336,6 +347,7 @@ const CiretaDashboard = () => {
       calendar: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
       menu: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
       chevronLeft: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>,
+      link: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>,
     };
     return icons[name] || null;
   };
@@ -393,7 +405,7 @@ const CiretaDashboard = () => {
             {MENU_ITEMS.analytics.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleTabChange(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
                   activeTab === item.id
                     ? 'bg-[#13636f] text-white'
@@ -414,7 +426,7 @@ const CiretaDashboard = () => {
             {MENU_ITEMS.socials.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleTabChange(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
                   activeTab === item.id
                     ? 'bg-[#13636f] text-white'
@@ -435,7 +447,7 @@ const CiretaDashboard = () => {
             {MENU_ITEMS.emails.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleTabChange(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
                   activeTab === item.id
                     ? 'bg-[#13636f] text-white'
@@ -465,52 +477,47 @@ const CiretaDashboard = () => {
       {/* Main Content */}
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} transition-all duration-300`}>
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-3 shadow-sm">
           <div className="flex items-center justify-between">
-            {/* Project Name */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                <svg className="w-5 h-5 text-[#13636f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                <span className="text-gray-800 text-sm font-medium">{projectName}</span>
+            {/* Left: Date Filter */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">From</span>
+                <input
+                  type="date"
+                  value={dateRange.startDate}
+                  onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
+                  className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#13636f]/20 focus:border-[#13636f] transition-all"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">To</span>
+                <input
+                  type="date"
+                  value={dateRange.endDate}
+                  onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
+                  className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#13636f]/20 focus:border-[#13636f] transition-all"
+                />
               </div>
             </div>
 
-            {/* Date Filter & Refresh */}
-            <div className="flex items-center gap-4">
-              {/* Date Range */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">From</span>
-                  <input
-                    type="date"
-                    value={dateRange.startDate}
-                    onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-                    className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#13636f]/20 focus:border-[#13636f] transition-all"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">To</span>
-                  <input
-                    type="date"
-                    value={dateRange.endDate}
-                    onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-                    className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#13636f]/20 focus:border-[#13636f] transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Refresh Button */}
-              <button
-                onClick={handleRefresh}
-                disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-[#13636f] text-white rounded-lg font-medium hover:bg-[#1a7a88] transition-all disabled:opacity-50 shadow-sm"
-              >
-                <Icon name="refresh" className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
+            {/* Center: Logo */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+              <svg className="w-8 h-8 text-[#13636f]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="text-xl font-bold text-[#13636f]">cireta</span>
             </div>
+
+            {/* Right: Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-[#13636f] text-white rounded-lg font-medium hover:bg-[#1a7a88] transition-all disabled:opacity-50 shadow-sm"
+            >
+              <Icon name="refresh" className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
           </div>
         </header>
 
@@ -670,6 +677,162 @@ const CiretaDashboard = () => {
             </div>
           )}
 
+          {/* Traffic Sources Tab */}
+          {activeTab === 'sources' && gaSourceData && (
+            <div className="space-y-6">
+              {/* Channel Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {gaSourceData.channels.slice(0, 6).map((channel, idx) => (
+                  <div key={idx} className="rounded-xl p-4 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-all duration-300">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: channel.fill }}></div>
+                      <p className="text-xs font-medium text-gray-500 truncate">{channel.channel}</p>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-800">{channel.users.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">users</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Channel Distribution Pie Chart */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Traffic by Channel
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={gaSourceData.channels}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={3}
+                        dataKey="users"
+                        nameKey="channel"
+                        animationDuration={1500}
+                        animationEasing="ease-out"
+                      >
+                        {gaSourceData.channels.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                        <LabelList dataKey="channel" position="outside" fill="#374151" fontSize={11} fontWeight="600" />
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                        formatter={(value) => [value.toLocaleString(), 'Users']}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Channel Bar Chart */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Users vs Sessions by Channel
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={gaSourceData.channels} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11, fontWeight: 600 }} />
+                      <YAxis dataKey="channel" type="category" width={100} tick={{ fill: '#374151', fontSize: 11, fontWeight: 600 }} />
+                      <Tooltip
+                        contentStyle={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                        formatter={(value) => value.toLocaleString()}
+                      />
+                      <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
+                      <Bar dataKey="users" name="Users" fill="#13636f" radius={[0, 4, 4, 0]} animationDuration={1200} animationEasing="ease-out" />
+                      <Bar dataKey="sessions" name="Sessions" fill="#3ab0c4" radius={[0, 4, 4, 0]} animationDuration={1200} animationBegin={200} animationEasing="ease-out" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Top Sources Table */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Top Sources
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-semibold text-gray-500 text-sm">Source</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Users</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Sessions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gaSourceData.sources.map((source, idx) => {
+                          const maxUsers = Math.max(...gaSourceData.sources.map(s => s.users));
+                          const percentage = (source.users / maxUsers) * 100;
+                          return (
+                            <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative w-full max-w-[120px]">
+                                    <div className="absolute inset-0 bg-[#13636f]/10 rounded" style={{ width: `${percentage}%` }}></div>
+                                    <span className="relative font-medium text-gray-800 text-sm">{source.source}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-right font-semibold text-[#13636f]">{source.users.toLocaleString()}</td>
+                              <td className="py-3 px-4 text-right text-gray-600">{source.sessions.toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Top Mediums Table */}
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Traffic by Medium
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-semibold text-gray-500 text-sm">Medium</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Users</th>
+                          <th className="text-right py-3 px-4 font-semibold text-gray-500 text-sm">Sessions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gaSourceData.mediums.map((medium, idx) => {
+                          const maxUsers = Math.max(...gaSourceData.mediums.map(m => m.users));
+                          const percentage = (medium.users / maxUsers) * 100;
+                          return (
+                            <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative w-full max-w-[120px]">
+                                    <div className="absolute inset-0 bg-[#3ab0c4]/10 rounded" style={{ width: `${percentage}%` }}></div>
+                                    <span className="relative font-medium text-gray-800 text-sm">{medium.medium}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-right font-semibold text-[#3ab0c4]">{medium.users.toLocaleString()}</td>
+                              <td className="py-3 px-4 text-right text-gray-600">{medium.sessions.toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Activity Stats (Website) Tab */}
           {activeTab === 'website' && gaOverview && (
             <div className="space-y-6">
@@ -778,13 +941,13 @@ const CiretaDashboard = () => {
               {(() => {
                 // Categorize events
                 const categories = {
-                  'HomePage': { color: '#13636f', bgColor: 'rgba(19, 99, 111, 0.1)', events: [] },
-                  'Menu': { color: '#3ab0c4', bgColor: 'rgba(58, 176, 196, 0.1)', events: [] },
-                  'Footer': { color: '#0077b5', bgColor: 'rgba(0, 119, 181, 0.1)', events: [] },
-                  'Form': { color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.1)', events: [] },
-                  'RWA': { color: '#d4af37', bgColor: 'rgba(212, 175, 55, 0.1)', events: [] },
-                  'Priority/Register': { color: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.1)', events: [] },
-                  'System': { color: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.1)', events: [] },
+                  'HomePage': { color: '#13636f', gradient: 'from-[#13636f] to-[#1a8a9a]', icon: '🏠', events: [] },
+                  'Menu': { color: '#3ab0c4', gradient: 'from-[#3ab0c4] to-[#5cc9db]', icon: '📋', events: [] },
+                  'Footer': { color: '#0077b5', gradient: 'from-[#0077b5] to-[#0099e5]', icon: '📎', events: [] },
+                  'Form': { color: '#22c55e', gradient: 'from-[#22c55e] to-[#4ade80]', icon: '📝', events: [] },
+                  'RWA': { color: '#d4af37', gradient: 'from-[#d4af37] to-[#f0d78c]', icon: '💎', events: [] },
+                  'Priority/Register': { color: '#8b5cf6', gradient: 'from-[#8b5cf6] to-[#a78bfa]', icon: '⭐', events: [] },
+                  'System': { color: '#6b7280', gradient: 'from-[#6b7280] to-[#9ca3af]', icon: '⚙️', events: [] },
                 };
 
                 gaEventData.forEach(event => {
@@ -807,45 +970,60 @@ const CiretaDashboard = () => {
                 });
 
                 return (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {Object.entries(categories).filter(([_, cat]) => cat.events.length > 0).map(([catName, cat]) => (
-                      <div key={catName} className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }}></div>
-                          <h3 className="text-lg font-semibold text-gray-800">{catName} Events</h3>
-                          <span className="ml-auto text-sm font-medium px-3 py-1 rounded-full" style={{ backgroundColor: cat.bgColor, color: cat.color }}>
-                            {cat.events.length} events
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {cat.events.slice(0, 8).map((event, idx) => {
-                            const maxCount = Math.max(...cat.events.map(e => e.count));
-                            const opacity = 0.15 + (event.count / maxCount) * 0.85;
-                            return (
-                              <div
-                                key={idx}
-                                className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all hover:scale-105 cursor-default"
-                                style={{
-                                  backgroundColor: cat.bgColor,
-                                  borderColor: cat.color,
-                                  borderWidth: '1px'
-                                }}
-                              >
-                                <span className="text-xs font-medium text-gray-700 max-w-[120px] truncate">
-                                  {event.eventName.replace(`${catName}_`, '').replace(/_/g, ' ')}
-                                </span>
-                                <span
-                                  className="text-xs font-bold px-2 py-0.5 rounded-full text-white min-w-[40px] text-center"
-                                  style={{ backgroundColor: cat.color }}
-                                >
-                                  {event.count >= 1000 ? `${(event.count / 1000).toFixed(1)}k` : event.count}
-                                </span>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+                    {Object.entries(categories).filter(([_, cat]) => cat.events.length > 0).map(([catName, cat]) => {
+                      const totalCount = cat.events.reduce((sum, e) => sum + e.count, 0);
+                      const maxCount = Math.max(...cat.events.map(e => e.count));
+                      return (
+                        <div key={catName} className="rounded-xl overflow-hidden shadow-lg border border-gray-100 bg-white hover:shadow-xl transition-all duration-300">
+                          {/* Header with gradient */}
+                          <div className={`bg-gradient-to-r ${cat.gradient} px-5 py-4`}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <span className="text-2xl">{cat.icon}</span>
+                                <div>
+                                  <h3 className="text-white font-bold text-lg">{catName}</h3>
+                                  <p className="text-white/80 text-xs">{cat.events.length} event types</p>
+                                </div>
                               </div>
-                            );
-                          })}
+                              <div className="text-right">
+                                <p className="text-white font-bold text-xl">{totalCount >= 1000 ? `${(totalCount / 1000).toFixed(1)}k` : totalCount}</p>
+                                <p className="text-white/80 text-xs">total</p>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Event list */}
+                          <div className="p-4 space-y-2">
+                            {cat.events.slice(0, 5).map((event, idx) => {
+                              const percentage = (event.count / maxCount) * 100;
+                              return (
+                                <div key={idx} className="group relative">
+                                  <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all relative overflow-hidden">
+                                    {/* Progress bar background */}
+                                    <div
+                                      className="absolute left-0 top-0 bottom-0 opacity-20 transition-all duration-500"
+                                      style={{
+                                        width: `${percentage}%`,
+                                        backgroundColor: cat.color,
+                                      }}
+                                    ></div>
+                                    <span className="text-sm font-medium text-gray-700 relative z-10 truncate max-w-[150px]">
+                                      {event.eventName.replace(`${catName}_`, '').replace(/_/g, ' ')}
+                                    </span>
+                                    <span className="text-sm font-bold relative z-10" style={{ color: cat.color }}>
+                                      {event.count.toLocaleString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {cat.events.length > 5 && (
+                              <p className="text-xs text-gray-400 text-center pt-2">+{cat.events.length - 5} more events</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               })()}
