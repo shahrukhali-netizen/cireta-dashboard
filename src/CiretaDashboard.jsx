@@ -18,6 +18,7 @@ const MENU_ITEMS = {
   analytics: [
     { id: 'overview', label: 'Traffic Overview', icon: 'grid' },
     { id: 'website', label: 'Activity Stats', icon: 'chart' },
+    { id: 'events', label: 'Custom Events', icon: 'zap' },
     { id: 'demographics', label: 'Demographics', icon: 'users' },
     { id: 'countries', label: 'Countries', icon: 'globe' },
   ],
@@ -56,6 +57,7 @@ const CiretaDashboard = () => {
   const [gaCityData, setGaCityData] = useState([]);
   const [gaDeviceData, setGaDeviceData] = useState([]);
   const [gaPageData, setGaPageData] = useState([]);
+  const [gaEventData, setGaEventData] = useState([]);
 
   // Sheets Data states (for Socials & Emails)
   const [coldEmailData, setColdEmailData] = useState([]);
@@ -104,23 +106,25 @@ const CiretaDashboard = () => {
       const params = `?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
 
       // Fetch all GA data in parallel
-      const [overviewRes, monthlyRes, countriesRes, citiesRes, devicesRes, pagesRes, healthRes] = await Promise.all([
+      const [overviewRes, monthlyRes, countriesRes, citiesRes, devicesRes, pagesRes, eventsRes, healthRes] = await Promise.all([
         fetch(`${API_BASE}/ga/overview${params}`),
         fetch(`${API_BASE}/ga/monthly${params}`),
         fetch(`${API_BASE}/ga/countries${params}`),
         fetch(`${API_BASE}/ga/cities${params}`),
         fetch(`${API_BASE}/ga/devices${params}`),
         fetch(`${API_BASE}/ga/pages${params}`),
+        fetch(`${API_BASE}/ga/events${params}`),
         fetch(`${API_BASE}/health`),
       ]);
 
-      const [overview, monthly, countries, cities, devices, pages, health] = await Promise.all([
+      const [overview, monthly, countries, cities, devices, pages, events, health] = await Promise.all([
         overviewRes.json(),
         monthlyRes.json(),
         countriesRes.json(),
         citiesRes.json(),
         devicesRes.json(),
         pagesRes.json(),
+        eventsRes.json(),
         healthRes.json(),
       ]);
 
@@ -130,6 +134,7 @@ const CiretaDashboard = () => {
       setGaCityData(cities);
       setGaDeviceData(devices);
       setGaPageData(pages);
+      setGaEventData(events);
       setGaConnected(health.gaConnected);
       setLastUpdated(new Date());
     } catch (err) {
@@ -326,6 +331,7 @@ const CiretaDashboard = () => {
       linkedin: <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>,
       x: <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
       mail: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+      zap: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
       refresh: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
       calendar: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
       menu: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
@@ -342,14 +348,18 @@ const CiretaDashboard = () => {
     color: '#0C0C0C',
   };
 
-  const StatCard = ({ title, value, subtitle, trend }) => (
-    <div className="rounded-xl p-4 shadow-sm border transition-all hover:shadow-md bg-white border-gray-100">
+  const StatCard = ({ title, value, subtitle, trend, accent }) => (
+    <div className="rounded-xl p-5 shadow-sm border transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-white border-gray-100 relative overflow-hidden group">
+      <div className="absolute top-0 right-0 w-20 h-20 transform translate-x-8 -translate-y-8 rounded-full opacity-10 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: accent || '#13636f' }}></div>
       <p className="text-sm font-medium text-gray-500 truncate">{title}</p>
-      <p className="text-2xl font-bold mt-1 text-[#13636f]">{value}</p>
-      {subtitle && <p className="text-xs mt-1 text-gray-500 truncate">{subtitle}</p>}
+      <p className="text-2xl font-bold mt-2 bg-gradient-to-r from-[#13636f] to-[#3ab0c4] bg-clip-text text-transparent">{value}</p>
+      {subtitle && <p className="text-xs mt-2 text-gray-400 truncate">{subtitle}</p>}
       {trend !== undefined && (
-        <p className={`text-xs mt-1 font-medium ${trend >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-          {trend >= 0 ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
+        <p className={`text-xs mt-2 font-semibold flex items-center gap-1 ${trend >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+          <span className={`inline-block transform ${trend >= 0 ? 'rotate-0' : 'rotate-180'}`}>
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+          </span>
+          {Math.abs(trend).toFixed(1)}%
         </p>
       )}
     </div>
@@ -537,22 +547,39 @@ const CiretaDashboard = () => {
               </div>
 
               {/* Monthly Trend Chart */}
-              <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Traffic Trend</h3>
+              <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                  <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                  Traffic Trend
+                </h3>
                 <div className="h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={gaMonthlyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="month" tick={{ fill: '#374151', fontSize: 12 }} />
-                      <YAxis yAxisId="left" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                      <YAxis yAxisId="right" orientation="right" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                      <Tooltip contentStyle={tooltipStyle} />
-                      <Legend />
-                      <Bar yAxisId="left" dataKey="activeUsers" name="Users" fill="#13636f" radius={[4, 4, 0, 0]}>
-                        <LabelList dataKey="activeUsers" position="top" fill="#13636f" fontSize={10} />
+                      <defs>
+                        <linearGradient id="usersGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#13636f" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#13636f" stopOpacity={0.6}/>
+                        </linearGradient>
+                        <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3ab0c4" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#3ab0c4" stopOpacity={0.6}/>
+                        </linearGradient>
+                        <linearGradient id="sessionsGradient" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#d4af37" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#f0d78c" stopOpacity={1}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                      <XAxis dataKey="month" tick={{ fill: '#374151', fontSize: 12 }} axisLine={{ stroke: '#e5e7eb' }} tickLine={false} />
+                      <YAxis yAxisId="left" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis yAxisId="right" orientation="right" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(19, 99, 111, 0.05)' }} />
+                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                      <Bar yAxisId="left" dataKey="activeUsers" name="Users" fill="url(#usersGradient)" radius={[6, 6, 0, 0]} animationDuration={1000}>
+                        <LabelList dataKey="activeUsers" position="top" fill="#13636f" fontSize={10} fontWeight="600" />
                       </Bar>
-                      <Bar yAxisId="left" dataKey="pageViews" name="Page Views" fill="#3ab0c4" radius={[4, 4, 0, 0]} />
-                      <Line yAxisId="right" type="monotone" dataKey="sessions" name="Sessions" stroke="#d4af37" strokeWidth={2} dot={{ fill: '#d4af37', r: 4 }} />
+                      <Bar yAxisId="left" dataKey="pageViews" name="Page Views" fill="url(#viewsGradient)" radius={[6, 6, 0, 0]} animationDuration={1200} />
+                      <Line yAxisId="right" type="monotone" dataKey="sessions" name="Sessions" stroke="url(#sessionsGradient)" strokeWidth={3} dot={{ fill: '#d4af37', r: 5, strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 7, fill: '#d4af37', stroke: '#fff', strokeWidth: 2 }} animationDuration={1500} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
@@ -560,8 +587,11 @@ const CiretaDashboard = () => {
 
               {/* Top Countries & Devices */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Top Countries</h3>
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Top Countries
+                  </h3>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -569,24 +599,30 @@ const CiretaDashboard = () => {
                           data={gaCountryData.slice(0, 5)}
                           cx="50%"
                           cy="50%"
-                          innerRadius={50}
-                          outerRadius={90}
-                          paddingAngle={2}
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={3}
                           dataKey="users"
-                          label={({ country, users }) => `${country}: ${users}`}
+                          label={({ country, percent }) => `${country}: ${(percent * 100).toFixed(0)}%`}
+                          labelLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                          animationDuration={1000}
+                          animationBegin={0}
                         >
                           {gaCountryData.slice(0, 5).map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="#fff" strokeWidth={2} />
                           ))}
                         </Pie>
-                        <Tooltip contentStyle={tooltipStyle} />
+                        <Tooltip contentStyle={tooltipStyle} formatter={(value, name, props) => [`${value.toLocaleString()} users`, props.payload.country]} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
-                <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Device Categories</h3>
+                <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#3ab0c4] to-[#d4af37] rounded-full"></span>
+                    Device Categories
+                  </h3>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -594,17 +630,20 @@ const CiretaDashboard = () => {
                           data={gaDeviceData}
                           cx="50%"
                           cy="50%"
-                          innerRadius={50}
-                          outerRadius={90}
-                          paddingAngle={2}
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={3}
                           dataKey="users"
-                          label={({ device, users }) => `${device}: ${users}`}
+                          label={({ device, percent }) => `${device}: ${(percent * 100).toFixed(0)}%`}
+                          labelLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                          animationDuration={1000}
+                          animationBegin={200}
                         >
                           {gaDeviceData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="#fff" strokeWidth={2} />
                           ))}
                         </Pie>
-                        <Tooltip contentStyle={tooltipStyle} />
+                        <Tooltip contentStyle={tooltipStyle} formatter={(value, name, props) => [`${value.toLocaleString()} users`, props.payload.device]} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -623,46 +662,244 @@ const CiretaDashboard = () => {
                 <StatCard title="Avg Session" value={`${Math.round(gaOverview.avgSessionDuration)}s`} />
               </div>
 
-              <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Monthly Activity</h3>
+              <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                  <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                  Monthly Activity
+                </h3>
                 <div className="h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={gaMonthlyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="month" tick={{ fill: '#374151', fontSize: 12 }} />
-                      <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
-                      <Tooltip contentStyle={tooltipStyle} />
-                      <Legend />
-                      <Bar dataKey="activeUsers" name="Users" fill="#13636f" radius={[4, 4, 0, 0]}>
-                        <LabelList dataKey="activeUsers" position="top" fill="#13636f" fontSize={10} />
+                    <BarChart data={gaMonthlyData} barCategoryGap="20%">
+                      <defs>
+                        <linearGradient id="activityUsersGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#13636f" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#13636f" stopOpacity={0.7}/>
+                        </linearGradient>
+                        <linearGradient id="activityViewsGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3ab0c4" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#3ab0c4" stopOpacity={0.7}/>
+                        </linearGradient>
+                        <linearGradient id="activityEventsGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#d4af37" stopOpacity={1}/>
+                          <stop offset="100%" stopColor="#d4af37" stopOpacity={0.7}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                      <XAxis dataKey="month" tick={{ fill: '#374151', fontSize: 12 }} axisLine={{ stroke: '#e5e7eb' }} tickLine={false} />
+                      <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(19, 99, 111, 0.05)' }} />
+                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                      <Bar dataKey="activeUsers" name="Users" fill="url(#activityUsersGradient)" radius={[6, 6, 0, 0]} animationDuration={800}>
+                        <LabelList dataKey="activeUsers" position="top" fill="#13636f" fontSize={10} fontWeight="600" />
                       </Bar>
-                      <Bar dataKey="pageViews" name="Views" fill="#3ab0c4" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="events" name="Events" fill="#d4af37" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="pageViews" name="Views" fill="url(#activityViewsGradient)" radius={[6, 6, 0, 0]} animationDuration={1000} />
+                      <Bar dataKey="events" name="Events" fill="url(#activityEventsGradient)" radius={[6, 6, 0, 0]} animationDuration={1200} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
               {/* Top Pages */}
-              <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Top Pages</h3>
+              <div className="rounded-xl p-6 shadow-lg border bg-white border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                  <span className="w-1 h-6 bg-gradient-to-b from-[#3ab0c4] to-[#13636f] rounded-full"></span>
+                  Top Pages
+                </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b-2 border-[#13636f]">
-                        <th className="text-left py-3 px-4 font-semibold text-[#13636f]">Page</th>
-                        <th className="text-right py-3 px-4 font-medium text-gray-500">Views</th>
-                        <th className="text-right py-3 px-4 font-medium text-gray-500">Users</th>
+                      <tr className="border-b-2 border-[#13636f] bg-gradient-to-r from-[#13636f]/5 to-transparent">
+                        <th className="text-left py-4 px-4 font-semibold text-[#13636f]">Page</th>
+                        <th className="text-right py-4 px-4 font-medium text-gray-500">Views</th>
+                        <th className="text-right py-4 px-4 font-medium text-gray-500">Users</th>
                       </tr>
                     </thead>
                     <tbody>
                       {gaPageData.map((row, idx) => (
-                        <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4 text-gray-800 font-medium truncate max-w-xs">{row.page}</td>
-                          <td className="text-right py-3 px-4 text-gray-600">{row.views.toLocaleString()}</td>
-                          <td className="text-right py-3 px-4 text-gray-600">{row.users.toLocaleString()}</td>
+                        <tr key={idx} className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-[#13636f]/5 hover:to-transparent transition-all duration-200">
+                          <td className="py-4 px-4 text-gray-800 font-medium truncate max-w-xs">{row.page}</td>
+                          <td className="text-right py-4 px-4 text-[#13636f] font-semibold">{row.views.toLocaleString()}</td>
+                          <td className="text-right py-4 px-4 text-gray-600">{row.users.toLocaleString()}</td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Custom Events Tab */}
+          {activeTab === 'events' && gaEventData.length > 0 && (
+            <div className="space-y-6">
+              {/* Events Summary */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                  title="Total Events"
+                  value={gaEventData.reduce((sum, e) => sum + e.count, 0).toLocaleString()}
+                  subtitle="All tracked events"
+                />
+                <StatCard
+                  title="Unique Event Types"
+                  value={gaEventData.length.toString()}
+                  subtitle="Different event names"
+                />
+                <StatCard
+                  title="Top Event"
+                  value={gaEventData[0]?.eventName || '-'}
+                  subtitle={`${(gaEventData[0]?.count || 0).toLocaleString()} occurrences`}
+                />
+                <StatCard
+                  title="Custom Events"
+                  value={gaEventData.filter(e => e.eventName.includes('_')).length.toString()}
+                  subtitle="User-defined events"
+                />
+              </div>
+
+              {/* Categorized Events */}
+              {(() => {
+                // Categorize events
+                const categories = {
+                  'HomePage': { color: '#13636f', bgColor: 'rgba(19, 99, 111, 0.1)', events: [] },
+                  'Menu': { color: '#3ab0c4', bgColor: 'rgba(58, 176, 196, 0.1)', events: [] },
+                  'Footer': { color: '#0077b5', bgColor: 'rgba(0, 119, 181, 0.1)', events: [] },
+                  'Form': { color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.1)', events: [] },
+                  'RWA': { color: '#d4af37', bgColor: 'rgba(212, 175, 55, 0.1)', events: [] },
+                  'Priority/Register': { color: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.1)', events: [] },
+                  'System': { color: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.1)', events: [] },
+                };
+
+                gaEventData.forEach(event => {
+                  const name = event.eventName;
+                  if (name.startsWith('HomePage_')) {
+                    categories['HomePage'].events.push(event);
+                  } else if (name.startsWith('Menu_')) {
+                    categories['Menu'].events.push(event);
+                  } else if (name.startsWith('Footer_')) {
+                    categories['Footer'].events.push(event);
+                  } else if (name.startsWith('Form_')) {
+                    categories['Form'].events.push(event);
+                  } else if (name.startsWith('RWA_')) {
+                    categories['RWA'].events.push(event);
+                  } else if (name.startsWith('PriorityList_') || name.startsWith('Register_')) {
+                    categories['Priority/Register'].events.push(event);
+                  } else {
+                    categories['System'].events.push(event);
+                  }
+                });
+
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {Object.entries(categories).filter(([_, cat]) => cat.events.length > 0).map(([catName, cat]) => (
+                      <div key={catName} className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }}></div>
+                          <h3 className="text-lg font-semibold text-gray-800">{catName} Events</h3>
+                          <span className="ml-auto text-sm font-medium px-3 py-1 rounded-full" style={{ backgroundColor: cat.bgColor, color: cat.color }}>
+                            {cat.events.length} events
+                          </span>
+                        </div>
+                        <div className="space-y-3">
+                          {cat.events.slice(0, 8).map((event, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors" style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
+                              <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]">
+                                {event.eventName.replace(`${catName}_`, '').replace('_', ' ')}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-500"
+                                    style={{
+                                      width: `${Math.min(100, (event.count / (gaEventData[0]?.count || 1)) * 100)}%`,
+                                      backgroundColor: cat.color
+                                    }}
+                                  ></div>
+                                </div>
+                                <span className="text-sm font-bold min-w-[60px] text-right" style={{ color: cat.color }}>
+                                  {event.count.toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              {/* Top Events Chart */}
+              <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Top 15 Events</h3>
+                <div className="h-[450px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={gaEventData.slice(0, 15)} layout="vertical">
+                      <defs>
+                        <linearGradient id="eventGradient" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#13636f" />
+                          <stop offset="100%" stopColor="#3ab0c4" />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={true} vertical={false} />
+                      <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11 }} tickFormatter={(v) => v.toLocaleString()} />
+                      <YAxis
+                        dataKey="eventName"
+                        type="category"
+                        tick={{ fill: '#374151', fontSize: 11 }}
+                        width={150}
+                        tickFormatter={(v) => v.length > 20 ? v.substring(0, 18) + '...' : v}
+                      />
+                      <Tooltip
+                        contentStyle={tooltipStyle}
+                        formatter={(value) => [value.toLocaleString(), 'Count']}
+                        labelFormatter={(label) => `Event: ${label}`}
+                      />
+                      <Bar
+                        dataKey="count"
+                        name="Event Count"
+                        fill="url(#eventGradient)"
+                        radius={[0, 4, 4, 0]}
+                        animationDuration={1000}
+                      >
+                        <LabelList
+                          dataKey="count"
+                          position="right"
+                          fill="#13636f"
+                          fontSize={10}
+                          formatter={(v) => v.toLocaleString()}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* All Events Table */}
+              <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">All Tracked Events</h3>
+                <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
+                  <table className="w-full">
+                    <thead className="sticky top-0 bg-white">
+                      <tr className="border-b-2 border-[#13636f]">
+                        <th className="text-left py-3 px-4 font-semibold text-[#13636f]">#</th>
+                        <th className="text-left py-3 px-4 font-semibold text-[#13636f]">Event Name</th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-500">Count</th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-500">% of Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {gaEventData.map((event, idx) => {
+                        const totalEvents = gaEventData.reduce((sum, e) => sum + e.count, 0);
+                        const percentage = ((event.count / totalEvents) * 100).toFixed(1);
+                        return (
+                          <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td className="py-3 px-4 text-gray-400 text-sm">{idx + 1}</td>
+                            <td className="py-3 px-4 font-medium text-gray-800">{event.eventName}</td>
+                            <td className="text-right py-3 px-4 text-[#13636f] font-bold">{event.count.toLocaleString()}</td>
+                            <td className="text-right py-3 px-4 text-gray-500">{percentage}%</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
