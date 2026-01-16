@@ -2,15 +2,16 @@ import { BetaAnalyticsDataClient } from '@google-analytics/data';
 
 const PROPERTY_ID = '461877498';
 
-let analyticsClient = null;
-
-if (process.env.GA_CLIENT_EMAIL && process.env.GA_PRIVATE_KEY) {
-  analyticsClient = new BetaAnalyticsDataClient({
-    credentials: {
-      client_email: process.env.GA_CLIENT_EMAIL,
-      private_key: process.env.GA_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    },
-  });
+function getAnalyticsClient() {
+  if (process.env.GA_CLIENT_EMAIL && process.env.GA_PRIVATE_KEY) {
+    return new BetaAnalyticsDataClient({
+      credentials: {
+        client_email: process.env.GA_CLIENT_EMAIL,
+        private_key: process.env.GA_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      },
+    });
+  }
+  return null;
 }
 
 function getMockOverview() {
@@ -36,6 +37,8 @@ export default async function handler(req, res) {
   }
 
   const { startDate = '90daysAgo', endDate = 'today' } = req.query;
+
+  const analyticsClient = getAnalyticsClient();
 
   if (!analyticsClient) {
     return res.json(getMockOverview());
