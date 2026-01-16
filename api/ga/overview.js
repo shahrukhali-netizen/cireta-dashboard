@@ -71,12 +71,17 @@ export default async function handler(req, res) {
         bounceRate: parseFloat(metrics[5].value) * 100,
         newUsers: parseInt(metrics[6].value),
         engagedSessions: parseInt(metrics[7].value),
+        _isLive: true
       });
     } else {
-      res.json(getMockOverview());
+      res.json({ ...getMockOverview(), _isLive: false, _noRows: true });
     }
   } catch (error) {
     console.error('GA Overview Error:', error.message);
-    res.json(getMockOverview());
+    res.json({
+      ...getMockOverview(),
+      _error: error.message,
+      _isLive: false
+    });
   }
 }
