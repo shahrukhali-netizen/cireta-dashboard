@@ -369,15 +369,15 @@ const CiretaDashboard = () => {
   return (
     <div className="min-h-screen bg-[#f8fafc] flex">
       {/* Sidebar */}
-      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-[#1a2236] border-r border-gray-800 flex flex-col transition-all duration-300 fixed h-full z-40`}>
+      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300 fixed h-full z-40 shadow-sm`}>
         {/* Logo */}
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           {!sidebarCollapsed && (
             <img src="/cireta-logo.svg" alt="Cireta" className="h-8" />
           )}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 rounded-lg hover:bg-gray-700 text-gray-400"
+            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
           >
             <Icon name={sidebarCollapsed ? "menu" : "chevronLeft"} className="w-5 h-5" />
           </button>
@@ -388,7 +388,7 @@ const CiretaDashboard = () => {
           {/* Analytics Section */}
           <div className="mb-6">
             {!sidebarCollapsed && (
-              <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Analytics</p>
+              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Analytics</p>
             )}
             {MENU_ITEMS.analytics.map((item) => (
               <button
@@ -397,7 +397,7 @@ const CiretaDashboard = () => {
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
                   activeTab === item.id
                     ? 'bg-[#13636f] text-white'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#13636f]'
                 }`}
               >
                 <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" />
@@ -409,7 +409,7 @@ const CiretaDashboard = () => {
           {/* Socials Section */}
           <div className="mb-6">
             {!sidebarCollapsed && (
-              <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Socials</p>
+              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Socials</p>
             )}
             {MENU_ITEMS.socials.map((item) => (
               <button
@@ -418,7 +418,7 @@ const CiretaDashboard = () => {
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
                   activeTab === item.id
                     ? 'bg-[#13636f] text-white'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#13636f]'
                 }`}
               >
                 <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" />
@@ -430,7 +430,7 @@ const CiretaDashboard = () => {
           {/* Emails Section */}
           <div className="mb-6">
             {!sidebarCollapsed && (
-              <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Emails</p>
+              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Emails</p>
             )}
             {MENU_ITEMS.emails.map((item) => (
               <button
@@ -439,7 +439,7 @@ const CiretaDashboard = () => {
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
                   activeTab === item.id
                     ? 'bg-[#13636f] text-white'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#13636f]'
                 }`}
               >
                 <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" />
@@ -450,11 +450,11 @@ const CiretaDashboard = () => {
         </nav>
 
         {/* GA Connection Status */}
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-200">
           <div className={`flex items-center gap-2 ${sidebarCollapsed ? 'justify-center' : ''}`}>
             <div className={`w-2 h-2 rounded-full ${gaConnected ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
             {!sidebarCollapsed && (
-              <span className={`text-sm ${gaConnected ? 'text-emerald-400' : 'text-amber-400'}`}>
+              <span className={`text-sm ${gaConnected ? 'text-emerald-600' : 'text-amber-600'}`}>
                 {gaConnected ? 'GA Connected' : 'Using Cache'}
               </span>
             )}
@@ -478,23 +478,27 @@ const CiretaDashboard = () => {
             </div>
 
             {/* Date Filter & Refresh */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {/* Date Range */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                <Icon name="calendar" className="w-4 h-4 text-[#13636f]" />
-                <input
-                  type="date"
-                  value={dateRange.startDate}
-                  onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-                  className="bg-transparent text-gray-700 text-sm focus:outline-none"
-                />
-                <span className="text-gray-400">-</span>
-                <input
-                  type="date"
-                  value={dateRange.endDate}
-                  onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-                  className="bg-transparent text-gray-700 text-sm focus:outline-none"
-                />
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">From</span>
+                  <input
+                    type="date"
+                    value={dateRange.startDate}
+                    onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
+                    className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#13636f]/20 focus:border-[#13636f] transition-all"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">To</span>
+                  <input
+                    type="date"
+                    value={dateRange.endDate}
+                    onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
+                    className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#13636f]/20 focus:border-[#13636f] transition-all"
+                  />
+                </div>
               </div>
 
               {/* Refresh Button */}
@@ -504,7 +508,7 @@ const CiretaDashboard = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-[#13636f] text-white rounded-lg font-medium hover:bg-[#1a7a88] transition-all disabled:opacity-50 shadow-sm"
               >
                 <Icon name="refresh" className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                Refresh Data
+                Refresh
               </button>
             </div>
           </div>
@@ -532,17 +536,13 @@ const CiretaDashboard = () => {
           {/* Traffic Overview Tab */}
           {activeTab === 'overview' && gaOverview && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                 <StatCard title="Active Users" value={gaOverview.activeUsers.toLocaleString()} subtitle="Total unique users" />
-                <StatCard title="Sessions" value={gaOverview.sessions.toLocaleString()} subtitle="Total sessions" />
+                <StatCard title="New Users" value={gaOverview.newUsers.toLocaleString()} subtitle="First-time visitors" />
                 <StatCard title="Page Views" value={gaOverview.pageViews.toLocaleString()} subtitle="Total views" />
                 <StatCard title="Events" value={gaOverview.events.toLocaleString()} subtitle="Total events" />
-              </div>
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard title="New Users" value={gaOverview.newUsers.toLocaleString()} subtitle="First-time visitors" />
-                <StatCard title="Engaged Sessions" value={gaOverview.engagedSessions.toLocaleString()} subtitle="Sessions > 10s" />
-                <StatCard title="Avg Session" value={`${Math.round(gaOverview.avgSessionDuration)}s`} subtitle="Average duration" />
+                <StatCard title="Sessions" value={gaOverview.sessions.toLocaleString()} subtitle="Total sessions" />
+                <StatCard title="Session Duration" value={`${Math.floor(gaOverview.avgSessionDuration / 60)}m ${Math.round(gaOverview.avgSessionDuration % 60)}s`} subtitle="Average duration" />
                 <StatCard title="Bounce Rate" value={`${gaOverview.bounceRate.toFixed(1)}%`} subtitle="Single-page sessions" />
               </div>
 
@@ -554,7 +554,7 @@ const CiretaDashboard = () => {
                 </h3>
                 <div className="h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={gaMonthlyData}>
+                    <ComposedChart data={gaMonthlyData} margin={{ top: 20, right: 30, left: 10, bottom: 5 }}>
                       <defs>
                         <linearGradient id="usersGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#13636f" stopOpacity={1}/>
@@ -564,22 +564,38 @@ const CiretaDashboard = () => {
                           <stop offset="0%" stopColor="#3ab0c4" stopOpacity={1}/>
                           <stop offset="100%" stopColor="#3ab0c4" stopOpacity={0.6}/>
                         </linearGradient>
-                        <linearGradient id="sessionsGradient" x1="0" y1="0" x2="1" y2="0">
+                        <linearGradient id="sessionsLineGradient" x1="0" y1="0" x2="1" y2="0">
                           <stop offset="0%" stopColor="#d4af37" stopOpacity={1}/>
                           <stop offset="100%" stopColor="#f0d78c" stopOpacity={1}/>
                         </linearGradient>
+                        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#d4af37" floodOpacity="0.3"/>
+                        </filter>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                      <XAxis dataKey="month" tick={{ fill: '#374151', fontSize: 12 }} axisLine={{ stroke: '#e5e7eb' }} tickLine={false} />
-                      <YAxis yAxisId="left" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                      <YAxis yAxisId="right" orientation="right" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <XAxis dataKey="month" tick={{ fill: '#1f2937', fontSize: 13, fontWeight: 600 }} axisLine={{ stroke: '#e5e7eb' }} tickLine={false} />
+                      <YAxis yAxisId="left" tick={{ fill: '#374151', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} tickFormatter={(v) => v.toLocaleString()} />
+                      <YAxis yAxisId="right" orientation="right" tick={{ fill: '#374151', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} tickFormatter={(v) => v.toLocaleString()} />
                       <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(19, 99, 111, 0.05)' }} />
-                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                      <Bar yAxisId="left" dataKey="activeUsers" name="Users" fill="url(#usersGradient)" radius={[6, 6, 0, 0]} animationDuration={1000}>
-                        <LabelList dataKey="activeUsers" position="top" fill="#13636f" fontSize={10} fontWeight="600" />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 600 }} />
+                      <Bar yAxisId="left" dataKey="activeUsers" name="Users" fill="url(#usersGradient)" radius={[6, 6, 0, 0]} animationDuration={1200} animationBegin={0} animationEasing="ease-out">
+                        <LabelList dataKey="activeUsers" position="top" fill="#13636f" fontSize={12} fontWeight="700" formatter={(v) => v.toLocaleString()} />
                       </Bar>
-                      <Bar yAxisId="left" dataKey="pageViews" name="Page Views" fill="url(#viewsGradient)" radius={[6, 6, 0, 0]} animationDuration={1200} />
-                      <Line yAxisId="right" type="monotone" dataKey="sessions" name="Sessions" stroke="url(#sessionsGradient)" strokeWidth={3} dot={{ fill: '#d4af37', r: 5, strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 7, fill: '#d4af37', stroke: '#fff', strokeWidth: 2 }} animationDuration={1500} />
+                      <Bar yAxisId="left" dataKey="pageViews" name="Page Views" fill="url(#viewsGradient)" radius={[6, 6, 0, 0]} animationDuration={1400} animationBegin={200} animationEasing="ease-out" />
+                      <Line
+                        yAxisId="right"
+                        type="monotone"
+                        dataKey="sessions"
+                        name="Sessions"
+                        stroke="#d4af37"
+                        strokeWidth={4}
+                        dot={{ fill: '#d4af37', r: 6, strokeWidth: 3, stroke: '#fff', filter: 'url(#shadow)' }}
+                        activeDot={{ r: 9, fill: '#d4af37', stroke: '#fff', strokeWidth: 3 }}
+                        animationDuration={2000}
+                        animationBegin={400}
+                        animationEasing="ease-out"
+                        isAnimationActive={true}
+                      />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
@@ -601,15 +617,16 @@ const CiretaDashboard = () => {
                           cy="50%"
                           innerRadius={60}
                           outerRadius={100}
-                          paddingAngle={3}
+                          paddingAngle={4}
                           dataKey="users"
                           label={({ country, percent }) => `${country}: ${(percent * 100).toFixed(0)}%`}
-                          labelLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
-                          animationDuration={1000}
+                          labelLine={{ stroke: '#6b7280', strokeWidth: 2 }}
+                          animationDuration={1500}
                           animationBegin={0}
+                          animationEasing="ease-out"
                         >
                           {gaCountryData.slice(0, 5).map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="#fff" strokeWidth={2} />
+                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="#fff" strokeWidth={3} />
                           ))}
                         </Pie>
                         <Tooltip contentStyle={tooltipStyle} formatter={(value, name, props) => [`${value.toLocaleString()} users`, props.payload.country]} />
@@ -632,15 +649,16 @@ const CiretaDashboard = () => {
                           cy="50%"
                           innerRadius={60}
                           outerRadius={100}
-                          paddingAngle={3}
+                          paddingAngle={4}
                           dataKey="users"
                           label={({ device, percent }) => `${device}: ${(percent * 100).toFixed(0)}%`}
-                          labelLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
-                          animationDuration={1000}
-                          animationBegin={200}
+                          labelLine={{ stroke: '#6b7280', strokeWidth: 2 }}
+                          animationDuration={1500}
+                          animationBegin={300}
+                          animationEasing="ease-out"
                         >
                           {gaDeviceData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="#fff" strokeWidth={2} />
+                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="#fff" strokeWidth={3} />
                           ))}
                         </Pie>
                         <Tooltip contentStyle={tooltipStyle} formatter={(value, name, props) => [`${value.toLocaleString()} users`, props.payload.device]} />
@@ -669,7 +687,7 @@ const CiretaDashboard = () => {
                 </h3>
                 <div className="h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={gaMonthlyData} barCategoryGap="20%">
+                    <BarChart data={gaMonthlyData} barCategoryGap="20%" margin={{ top: 20, right: 20, left: 10, bottom: 5 }}>
                       <defs>
                         <linearGradient id="activityUsersGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#13636f" stopOpacity={1}/>
@@ -685,15 +703,15 @@ const CiretaDashboard = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                      <XAxis dataKey="month" tick={{ fill: '#374151', fontSize: 12 }} axisLine={{ stroke: '#e5e7eb' }} tickLine={false} />
-                      <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <XAxis dataKey="month" tick={{ fill: '#1f2937', fontSize: 13, fontWeight: 600 }} axisLine={{ stroke: '#e5e7eb' }} tickLine={false} />
+                      <YAxis tick={{ fill: '#374151', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} tickFormatter={(v) => v.toLocaleString()} />
                       <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(19, 99, 111, 0.05)' }} />
-                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                      <Bar dataKey="activeUsers" name="Users" fill="url(#activityUsersGradient)" radius={[6, 6, 0, 0]} animationDuration={800}>
-                        <LabelList dataKey="activeUsers" position="top" fill="#13636f" fontSize={10} fontWeight="600" />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 600 }} />
+                      <Bar dataKey="activeUsers" name="Users" fill="url(#activityUsersGradient)" radius={[6, 6, 0, 0]} animationDuration={1200} animationBegin={0} animationEasing="ease-out">
+                        <LabelList dataKey="activeUsers" position="top" fill="#13636f" fontSize={12} fontWeight="700" formatter={(v) => v.toLocaleString()} />
                       </Bar>
-                      <Bar dataKey="pageViews" name="Views" fill="url(#activityViewsGradient)" radius={[6, 6, 0, 0]} animationDuration={1000} />
-                      <Bar dataKey="events" name="Events" fill="url(#activityEventsGradient)" radius={[6, 6, 0, 0]} animationDuration={1200} />
+                      <Bar dataKey="pageViews" name="Views" fill="url(#activityViewsGradient)" radius={[6, 6, 0, 0]} animationDuration={1400} animationBegin={200} animationEasing="ease-out" />
+                      <Bar dataKey="events" name="Events" fill="url(#activityEventsGradient)" radius={[6, 6, 0, 0]} animationDuration={1600} animationBegin={400} animationEasing="ease-out" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -799,28 +817,32 @@ const CiretaDashboard = () => {
                             {cat.events.length} events
                           </span>
                         </div>
-                        <div className="space-y-3">
-                          {cat.events.slice(0, 8).map((event, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors" style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
-                              <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]">
-                                {event.eventName.replace(`${catName}_`, '').replace('_', ' ')}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-500"
-                                    style={{
-                                      width: `${Math.min(100, (event.count / (gaEventData[0]?.count || 1)) * 100)}%`,
-                                      backgroundColor: cat.color
-                                    }}
-                                  ></div>
-                                </div>
-                                <span className="text-sm font-bold min-w-[60px] text-right" style={{ color: cat.color }}>
-                                  {event.count.toLocaleString()}
+                        <div className="flex flex-wrap gap-2">
+                          {cat.events.slice(0, 8).map((event, idx) => {
+                            const maxCount = Math.max(...cat.events.map(e => e.count));
+                            const opacity = 0.15 + (event.count / maxCount) * 0.85;
+                            return (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all hover:scale-105 cursor-default"
+                                style={{
+                                  backgroundColor: cat.bgColor,
+                                  borderColor: cat.color,
+                                  borderWidth: '1px'
+                                }}
+                              >
+                                <span className="text-xs font-medium text-gray-700 max-w-[120px] truncate">
+                                  {event.eventName.replace(`${catName}_`, '').replace(/_/g, ' ')}
+                                </span>
+                                <span
+                                  className="text-xs font-bold px-2 py-0.5 rounded-full text-white min-w-[40px] text-center"
+                                  style={{ backgroundColor: cat.color }}
+                                >
+                                  {event.count >= 1000 ? `${(event.count / 1000).toFixed(1)}k` : event.count}
                                 </span>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -830,10 +852,13 @@ const CiretaDashboard = () => {
 
               {/* Top Events Chart */}
               <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Top 15 Events</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                  <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                  Top 15 Events
+                </h3>
                 <div className="h-[450px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={gaEventData.slice(0, 15)} layout="vertical">
+                    <BarChart data={gaEventData.slice(0, 15)} layout="vertical" margin={{ top: 10, right: 80, left: 10, bottom: 5 }}>
                       <defs>
                         <linearGradient id="eventGradient" x1="0" y1="0" x2="1" y2="0">
                           <stop offset="0%" stopColor="#13636f" />
@@ -841,13 +866,13 @@ const CiretaDashboard = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={true} vertical={false} />
-                      <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11 }} tickFormatter={(v) => v.toLocaleString()} />
+                      <XAxis type="number" tick={{ fill: '#374151', fontSize: 12, fontWeight: 500 }} tickFormatter={(v) => v.toLocaleString()} />
                       <YAxis
                         dataKey="eventName"
                         type="category"
-                        tick={{ fill: '#374151', fontSize: 11 }}
-                        width={150}
-                        tickFormatter={(v) => v.length > 20 ? v.substring(0, 18) + '...' : v}
+                        tick={{ fill: '#1f2937', fontSize: 12, fontWeight: 600 }}
+                        width={160}
+                        tickFormatter={(v) => v.length > 22 ? v.substring(0, 20) + '...' : v}
                       />
                       <Tooltip
                         contentStyle={tooltipStyle}
@@ -858,14 +883,17 @@ const CiretaDashboard = () => {
                         dataKey="count"
                         name="Event Count"
                         fill="url(#eventGradient)"
-                        radius={[0, 4, 4, 0]}
-                        animationDuration={1000}
+                        radius={[0, 6, 6, 0]}
+                        animationDuration={1500}
+                        animationBegin={0}
+                        animationEasing="ease-out"
                       >
                         <LabelList
                           dataKey="count"
                           position="right"
                           fill="#13636f"
-                          fontSize={10}
+                          fontSize={12}
+                          fontWeight={700}
                           formatter={(v) => v.toLocaleString()}
                         />
                       </Bar>
@@ -912,7 +940,10 @@ const CiretaDashboard = () => {
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Device Distribution</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Device Distribution
+                  </h3>
                   <div className="h-[350px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -921,30 +952,39 @@ const CiretaDashboard = () => {
                           cx="50%"
                           cy="50%"
                           outerRadius={120}
+                          innerRadius={50}
+                          paddingAngle={4}
                           dataKey="users"
                           label={({ device, percent }) => `${device}: ${(percent * 100).toFixed(1)}%`}
+                          labelLine={{ stroke: '#6b7280', strokeWidth: 2 }}
+                          animationDuration={1500}
+                          animationBegin={0}
+                          animationEasing="ease-out"
                         >
                           {gaDeviceData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="#fff" strokeWidth={3} />
                           ))}
                         </Pie>
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Legend />
+                        <Legend wrapperStyle={{ fontWeight: 600 }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
                 <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Device Stats</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#3ab0c4] to-[#d4af37] rounded-full"></span>
+                    Device Stats
+                  </h3>
                   <div className="space-y-4">
                     {gaDeviceData.map((device, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-4 rounded-lg bg-gray-50">
+                      <div key={idx} className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all hover:scale-[1.02]">
                         <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: device.fill }}></div>
-                          <span className="font-medium text-gray-800 capitalize">{device.device}</span>
+                          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: device.fill }}></div>
+                          <span className="font-semibold text-gray-800 capitalize">{device.device}</span>
                         </div>
-                        <span className="text-lg font-bold text-[#13636f]">{device.users.toLocaleString()}</span>
+                        <span className="text-xl font-bold text-[#13636f]">{device.users.toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -958,16 +998,25 @@ const CiretaDashboard = () => {
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Top Countries</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#13636f] to-[#3ab0c4] rounded-full"></span>
+                    Top Countries
+                  </h3>
                   <div className="h-[400px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={gaCountryData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                        <YAxis dataKey="country" type="category" tick={{ fill: '#374151', fontSize: 11 }} width={100} />
+                      <BarChart data={gaCountryData} layout="vertical" margin={{ top: 10, right: 60, left: 10, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="countryGradient" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#13636f" />
+                            <stop offset="100%" stopColor="#1a8a9a" />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={true} vertical={false} />
+                        <XAxis type="number" tick={{ fill: '#374151', fontSize: 12, fontWeight: 500 }} tickFormatter={(v) => v.toLocaleString()} />
+                        <YAxis dataKey="country" type="category" tick={{ fill: '#1f2937', fontSize: 12, fontWeight: 600 }} width={110} />
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Bar dataKey="users" name="Users" fill="#13636f" radius={[0, 4, 4, 0]}>
-                          <LabelList dataKey="users" position="right" fill="#13636f" fontSize={10} />
+                        <Bar dataKey="users" name="Users" fill="url(#countryGradient)" radius={[0, 6, 6, 0]} animationDuration={1500} animationBegin={0} animationEasing="ease-out">
+                          <LabelList dataKey="users" position="right" fill="#13636f" fontSize={12} fontWeight={700} formatter={(v) => v.toLocaleString()} />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -975,16 +1024,25 @@ const CiretaDashboard = () => {
                 </div>
 
                 <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Top Cities</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-gradient-to-b from-[#3ab0c4] to-[#d4af37] rounded-full"></span>
+                    Top Cities
+                  </h3>
                   <div className="h-[400px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={gaCityData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                        <YAxis dataKey="city" type="category" tick={{ fill: '#374151', fontSize: 11 }} width={100} />
+                      <BarChart data={gaCityData} layout="vertical" margin={{ top: 10, right: 60, left: 10, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="cityGradient" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#3ab0c4" />
+                            <stop offset="100%" stopColor="#5cc9db" />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={true} vertical={false} />
+                        <XAxis type="number" tick={{ fill: '#374151', fontSize: 12, fontWeight: 500 }} tickFormatter={(v) => v.toLocaleString()} />
+                        <YAxis dataKey="city" type="category" tick={{ fill: '#1f2937', fontSize: 12, fontWeight: 600 }} width={110} />
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Bar dataKey="users" name="Users" fill="#3ab0c4" radius={[0, 4, 4, 0]}>
-                          <LabelList dataKey="users" position="right" fill="#3ab0c4" fontSize={10} />
+                        <Bar dataKey="users" name="Users" fill="url(#cityGradient)" radius={[0, 6, 6, 0]} animationDuration={1500} animationBegin={200} animationEasing="ease-out">
+                          <LabelList dataKey="users" position="right" fill="#3ab0c4" fontSize={12} fontWeight={700} formatter={(v) => v.toLocaleString()} />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
