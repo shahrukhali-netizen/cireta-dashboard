@@ -264,6 +264,197 @@ app.get('/api/ga/pages', async (req, res) => {
   }
 });
 
+// GA Events endpoint
+app.get('/api/ga/events', async (req, res) => {
+  const { startDate = '90daysAgo', endDate = 'today' } = req.query;
+
+  if (!analyticsClient) {
+    return res.json(getMockEvents());
+  }
+
+  try {
+    const [response] = await analyticsClient.runReport({
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: formatDate(startDate), endDate: formatDate(endDate) }],
+      dimensions: [{ name: 'eventName' }],
+      metrics: [{ name: 'eventCount' }],
+      orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+      limit: 50,
+    });
+
+    if (response.rows) {
+      const events = response.rows.map((row) => ({
+        eventName: row.dimensionValues[0].value,
+        count: parseInt(row.metricValues[0].value),
+      }));
+      res.json(events);
+    } else {
+      res.json(getMockEvents());
+    }
+  } catch (error) {
+    console.error('GA Events Error:', error.message);
+    res.json(getMockEvents());
+  }
+});
+
+// GA Sources endpoint
+app.get('/api/ga/sources', async (req, res) => {
+  const { startDate = '90daysAgo', endDate = 'today' } = req.query;
+
+  if (!analyticsClient) {
+    return res.json(getMockSources());
+  }
+
+  try {
+    const colors = ['#13636f', '#1a7a88', '#2596a8', '#3ab0c4', '#5cc4d4', '#7dd3e0', '#a0e2eb', '#c3f0f5'];
+
+    const [channelResponse] = await analyticsClient.runReport({
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: formatDate(startDate), endDate: formatDate(endDate) }],
+      dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+      metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 10,
+    });
+
+    const [sourceResponse] = await analyticsClient.runReport({
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: formatDate(startDate), endDate: formatDate(endDate) }],
+      dimensions: [{ name: 'sessionSource' }],
+      metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 10,
+    });
+
+    const [mediumResponse] = await analyticsClient.runReport({
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: formatDate(startDate), endDate: formatDate(endDate) }],
+      dimensions: [{ name: 'sessionMedium' }],
+      metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 10,
+    });
+
+    const result = { channels: [], sources: [], mediums: [] };
+
+    if (channelResponse.rows) {
+      result.channels = channelResponse.rows.map((row, idx) => ({
+        channel: row.dimensionValues[0].value,
+        users: parseInt(row.metricValues[0].value),
+        sessions: parseInt(row.metricValues[1].value),
+        fill: colors[idx % colors.length],
+      }));
+    }
+
+    if (sourceResponse.rows) {
+      result.sources = sourceResponse.rows.map((row) => ({
+        source: row.dimensionValues[0].value,
+        users: parseInt(row.metricValues[0].value),
+        sessions: parseInt(row.metricValues[1].value),
+      }));
+    }
+
+    if (mediumResponse.rows) {
+      result.mediums = mediumResponse.rows.map((row) => ({
+        medium: row.dimensionValues[0].value,
+        users: parseInt(row.metricValues[0].value),
+        sessions: parseInt(row.metricValues[1].value),
+      }));
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('GA Sources Error:', error.message);
+    res.json(getMockSources());
+  }
+});
+
+// GA Demographics endpoint
+app.get('/api/ga/demographics', async (req, res) => {
+  const { startDate = '90daysAgo', endDate = 'today' } = req.query;
+
+  if (!analyticsClient) {
+    return res.json(getMockDemographics());
+  }
+
+  try {
+    const colors = ['#13636f', '#1a7a88', '#2596a8', '#3ab0c4', '#5cc4d4', '#7dd3e0', '#a0e2eb', '#c3f0f5'];
+
+    const [browserResponse] = await analyticsClient.runReport({
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: formatDate(startDate), endDate: formatDate(endDate) }],
+      dimensions: [{ name: 'browser' }],
+      metrics: [{ name: 'activeUsers' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 8,
+    });
+
+    const [osResponse] = await analyticsClient.runReport({
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: formatDate(startDate), endDate: formatDate(endDate) }],
+      dimensions: [{ name: 'operatingSystem' }],
+      metrics: [{ name: 'activeUsers' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 8,
+    });
+
+    const [resolutionResponse] = await analyticsClient.runReport({
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: formatDate(startDate), endDate: formatDate(endDate) }],
+      dimensions: [{ name: 'screenResolution' }],
+      metrics: [{ name: 'activeUsers' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 8,
+    });
+
+    const [languageResponse] = await analyticsClient.runReport({
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: formatDate(startDate), endDate: formatDate(endDate) }],
+      dimensions: [{ name: 'language' }],
+      metrics: [{ name: 'activeUsers' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 8,
+    });
+
+    const result = { browsers: [], operatingSystems: [], screenResolutions: [], languages: [] };
+
+    if (browserResponse.rows) {
+      result.browsers = browserResponse.rows.map((row, idx) => ({
+        browser: row.dimensionValues[0].value,
+        users: parseInt(row.metricValues[0].value),
+        fill: colors[idx % colors.length],
+      }));
+    }
+
+    if (osResponse.rows) {
+      result.operatingSystems = osResponse.rows.map((row, idx) => ({
+        os: row.dimensionValues[0].value,
+        users: parseInt(row.metricValues[0].value),
+        fill: colors[idx % colors.length],
+      }));
+    }
+
+    if (resolutionResponse.rows) {
+      result.screenResolutions = resolutionResponse.rows.map((row) => ({
+        resolution: row.dimensionValues[0].value,
+        users: parseInt(row.metricValues[0].value),
+      }));
+    }
+
+    if (languageResponse.rows) {
+      result.languages = languageResponse.rows.map((row) => ({
+        language: row.dimensionValues[0].value,
+        users: parseInt(row.metricValues[0].value),
+      }));
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('GA Demographics Error:', error.message);
+    res.json(getMockDemographics());
+  }
+});
+
 // Mock data functions
 function getMockOverview() {
   return {
@@ -329,6 +520,79 @@ function getMockPages() {
     { page: '/contact', views: 432, users: 321 },
     { page: '/team', views: 234, users: 187 },
   ];
+}
+
+function getMockEvents() {
+  return [
+    { eventName: 'page_view', count: 5000 },
+    { eventName: 'scroll', count: 3500 },
+    { eventName: 'click', count: 2800 },
+    { eventName: 'form_submit', count: 150 },
+    { eventName: 'session_start', count: 1200 },
+  ];
+}
+
+function getMockSources() {
+  return {
+    channels: [
+      { channel: 'Organic Search', users: 1245, sessions: 1890, fill: '#13636f' },
+      { channel: 'Direct', users: 876, sessions: 1234, fill: '#1a7a88' },
+      { channel: 'Social', users: 543, sessions: 678, fill: '#3ab0c4' },
+      { channel: 'Referral', users: 321, sessions: 432, fill: '#5cc4d4' },
+      { channel: 'Email', users: 198, sessions: 267, fill: '#7dd3e0' },
+      { channel: 'Paid Search', users: 87, sessions: 123, fill: '#a0e2eb' },
+    ],
+    sources: [
+      { source: 'google', users: 1100, sessions: 1650 },
+      { source: '(direct)', users: 876, sessions: 1234 },
+      { source: 'linkedin.com', users: 320, sessions: 410 },
+      { source: 'twitter.com', users: 180, sessions: 225 },
+      { source: 'facebook.com', users: 43, sessions: 58 },
+      { source: 'bing', users: 89, sessions: 134 },
+      { source: 'yahoo', users: 56, sessions: 78 },
+    ],
+    mediums: [
+      { medium: 'organic', users: 1245, sessions: 1890 },
+      { medium: '(none)', users: 876, sessions: 1234 },
+      { medium: 'referral', users: 543, sessions: 678 },
+      { medium: 'social', users: 321, sessions: 432 },
+      { medium: 'email', users: 198, sessions: 267 },
+      { medium: 'cpc', users: 87, sessions: 123 },
+    ],
+  };
+}
+
+function getMockDemographics() {
+  return {
+    browsers: [
+      { browser: 'Chrome', users: 1245, fill: '#13636f' },
+      { browser: 'Safari', users: 567, fill: '#1a7a88' },
+      { browser: 'Firefox', users: 234, fill: '#3ab0c4' },
+      { browser: 'Edge', users: 189, fill: '#5cc4d4' },
+      { browser: 'Opera', users: 45, fill: '#7dd3e0' },
+    ],
+    operatingSystems: [
+      { os: 'Windows', users: 890, fill: '#13636f' },
+      { os: 'macOS', users: 654, fill: '#1a7a88' },
+      { os: 'iOS', users: 432, fill: '#3ab0c4' },
+      { os: 'Android', users: 287, fill: '#5cc4d4' },
+      { os: 'Linux', users: 67, fill: '#7dd3e0' },
+    ],
+    screenResolutions: [
+      { resolution: '1920x1080', users: 567 },
+      { resolution: '1366x768', users: 432 },
+      { resolution: '1536x864', users: 321 },
+      { resolution: '2560x1440', users: 234 },
+      { resolution: '1440x900', users: 156 },
+    ],
+    languages: [
+      { language: 'en-us', users: 890 },
+      { language: 'en-gb', users: 234 },
+      { language: 'zh-cn', users: 189 },
+      { language: 'es', users: 134 },
+      { language: 'de', users: 87 },
+    ],
+  };
 }
 
 // Health check

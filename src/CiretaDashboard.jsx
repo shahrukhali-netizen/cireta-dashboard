@@ -242,7 +242,9 @@ const CiretaDashboard = () => {
               impressions: parseNum(row[1]),
               engagementRate: '0%',
               pageViews: parseNum(row[2]),
-              followers: parseNum(row[3]) || 630,
+              uniqueVisitors: parseNum(row[3]),
+              newFollowers: parseNum(row[4]),
+              followers: parseNum(row[5]) || 630,
             });
           }
         }
@@ -299,10 +301,10 @@ const CiretaDashboard = () => {
   ];
 
   const getDefaultLinkedInData = () => [
-    { month: 'Sep 25', impressions: 2213, pageViews: 67, followers: 630 },
-    { month: 'Oct 25', impressions: 23352, pageViews: 245, followers: 630 },
-    { month: 'Nov 25', impressions: 5156, pageViews: 190, followers: 630 },
-    { month: 'Dec 25', impressions: 12429, pageViews: 233, followers: 630 },
+    { month: 'Sep 25', impressions: 2213, pageViews: 67, uniqueVisitors: 40, newFollowers: 5, followers: 630 },
+    { month: 'Oct 25', impressions: 23352, pageViews: 245, uniqueVisitors: 150, newFollowers: 18, followers: 648 },
+    { month: 'Nov 25', impressions: 5156, pageViews: 190, uniqueVisitors: 110, newFollowers: 12, followers: 660 },
+    { month: 'Dec 25', impressions: 12429, pageViews: 233, uniqueVisitors: 130, newFollowers: 15, followers: 675 },
   ];
 
   const getDefaultXData = () => [
@@ -1391,11 +1393,13 @@ const CiretaDashboard = () => {
           {/* LinkedIn Tab */}
           {activeTab === 'linkedin' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard title="Total Impressions" value={totalLinkedInImpressions.toLocaleString()} />
-                <StatCard title="Peak Impressions" value={Math.max(...linkedInData.map(d => d.impressions), 0).toLocaleString()} />
                 <StatCard title="Total Page Views" value={linkedInData.reduce((sum, d) => sum + d.pageViews, 0).toLocaleString()} />
-                <StatCard title="Followers" value={(linkedInData[linkedInData.length - 1]?.followers || 630).toLocaleString()} />
+                <StatCard title="Total Unique Visitors" value={linkedInData.reduce((sum, d) => sum + d.uniqueVisitors, 0).toLocaleString()} />
+                <StatCard title="New Followers in last 30 days" value={(linkedInData[linkedInData.length - 1]?.newFollowers || 0).toLocaleString()} />
+                <StatCard title="Total Followers" value={(linkedInData[linkedInData.length - 1]?.followers || 630).toLocaleString()} />
+                <StatCard title="Peak Impressions" value={Math.max(...linkedInData.map(d => d.impressions), 0).toLocaleString()} />
               </div>
 
               <div className="rounded-xl p-6 shadow-sm border bg-white border-gray-100">
@@ -1426,7 +1430,9 @@ const CiretaDashboard = () => {
                         <th className="text-left py-3 px-4 font-semibold text-[#0077b5]">Month</th>
                         <th className="text-right py-3 px-4 font-medium text-gray-500">Impressions</th>
                         <th className="text-right py-3 px-4 font-medium text-gray-500">Page Views</th>
-                        <th className="text-right py-3 px-4 font-medium text-gray-500">Followers</th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-500">Unique Visitors</th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-500">New Followers in last 30 days</th>
+                        <th className="text-right py-3 px-4 font-medium text-gray-500">Total Followers</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1435,6 +1441,8 @@ const CiretaDashboard = () => {
                           <td className="py-3 px-4 font-bold text-[#0077b5]">{row.month}</td>
                           <td className="text-right py-3 px-4 text-gray-600">{row.impressions.toLocaleString()}</td>
                           <td className="text-right py-3 px-4 text-gray-600">{row.pageViews}</td>
+                          <td className="text-right py-3 px-4 text-gray-600">{row.uniqueVisitors}</td>
+                          <td className="text-right py-3 px-4 text-gray-600">{row.newFollowers}</td>
                           <td className="text-right py-3 px-4 text-gray-600">{row.followers}</td>
                         </tr>
                       ))}
