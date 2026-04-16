@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, ComposedChart, Area, LabelList } from 'recharts';
+import BlogCMS from './BlogCMS';
 
 // Backend API URL - auto-detect local vs deployed
 const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -30,6 +31,9 @@ const MENU_ITEMS = {
   ],
   emails: [
     { id: 'email', label: 'Email Campaigns', icon: 'mail' },
+  ],
+  content: [
+    { id: 'blog-cms', label: 'Blog CMS', icon: 'edit' },
   ],
 };
 
@@ -358,6 +362,7 @@ const CiretaDashboard = () => {
       menu: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
       chevronLeft: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>,
       link: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>,
+      edit: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
     };
     return icons[name] || null;
   };
@@ -469,6 +474,27 @@ const CiretaDashboard = () => {
               </button>
             ))}
           </div>
+
+          {/* Content Section */}
+          <div className="mb-6">
+            {!sidebarCollapsed && (
+              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Content</p>
+            )}
+            {MENU_ITEMS.content.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleTabChange(item.id)}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
+                  activeTab === item.id
+                    ? 'bg-[#13636f] text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#13636f]'
+                }`}
+              >
+                <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span>{item.label}</span>}
+              </button>
+            ))}
+          </div>
         </nav>
 
         {/* GA Connection Status */}
@@ -486,6 +512,10 @@ const CiretaDashboard = () => {
 
       {/* Main Content */}
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} transition-all duration-300`}>
+        {activeTab === 'blog-cms' ? (
+          <BlogCMS />
+        ) : (
+        <>
         {/* Header */}
         <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-3 shadow-sm">
           <div className="flex items-center justify-between">
@@ -1646,6 +1676,8 @@ const CiretaDashboard = () => {
             </div>
           </div>
         </div>
+        </>
+        )}
       </main>
     </div>
   );

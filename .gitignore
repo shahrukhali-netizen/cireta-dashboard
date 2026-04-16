@@ -24,3 +24,11 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Env files with secrets
+.env
+.env.local
+.env.*.local
+
+# GA credentials
+ga-credentials.json
