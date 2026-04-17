@@ -56,6 +56,20 @@ const getCategory = (v) => CATEGORIES.find(c => c.value === v) || CATEGORIES[0];
    ═══════════════════════════════════════════ */
 function toSlug(t){return t.toLowerCase().trim().replace(/[^\w\s-]/g,"").replace(/[\s_-]+/g,"-").replace(/^-+|-+$/g,"");}
 
+function parseMd(md){
+  if(!md)return"";
+  return md
+    .replace(/^### (.*$)/gim,"<h3>$1</h3>").replace(/^## (.*$)/gim,"<h2>$1</h2>").replace(/^# (.*$)/gim,"<h1>$1</h1>")
+    .replace(/\*\*\*(.*?)\*\*\*/gim,"<strong><em>$1</em></strong>").replace(/\*\*(.*?)\*\*/gim,"<strong>$1</strong>").replace(/\*(.*?)\*/gim,"<em>$1</em>")
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim,'<img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:12px 0"/>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/gim,'<a href="$2" style="color:#2dd4bf">$1</a>')
+    .replace(/```([\s\S]*?)```/gim,'<pre style="background:#0c1222;padding:16px;border-radius:8px;overflow-x:auto;border:1px solid #1e293b"><code style="color:#5eead4;font-size:13px">$1</code></pre>')
+    .replace(/`([^`]+)`/gim,'<code style="background:#1e293b;color:#5eead4;padding:2px 6px;border-radius:4px;font-size:.9em">$1</code>')
+    .replace(/^> (.*$)/gim,'<blockquote style="border-left:3px solid #0d9488;padding:8px 16px;color:#94a3b8;margin:14px 0;background:#0c1222;border-radius:0 6px 6px 0">$1</blockquote>')
+    .replace(/^---$/gim,'<hr style="border:none;border-top:1px solid #1e293b;margin:24px 0"/>').replace(/^\- (.*$)/gim,"<li>$1</li>")
+    .replace(/^\d+\. (.*$)/gim,"<li>$1</li>").replace(/\n\n/g,"</p><p>").replace(/^(?!<[hluobp])/gim,"<p>")+"</p>";
+}
+
 const listingCol = () => FM.collection(db, ...LISTING_PATH);
 const detailCol = () => FM.collection(db, ...DETAIL_PATH);
 const listingDoc = (id) => FM.doc(db, ...LISTING_PATH, id);
@@ -99,6 +113,11 @@ const ic={
   x:"M18 6L6 18 M6 6l12 12",
   db:"M12 2C6.48 2 2 4.02 2 6.5v11C2 19.98 6.48 22 12 22s10-2.02 10-4.5v-11C22 4.02 17.52 2 12 2z M2 6.5C2 8.98 6.48 11 12 11s10-2.02 10-4.5 M2 12c0 2.48 4.48 4.5 10 4.5s10-2.02 10-4.5",
   globe:"M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z",
+  bold:"M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z",italic:"M19 4h-9 M14 20H5 M15 4L9 20",
+  h2:"M4 12h8 M4 18V6 M12 18V6 M17 10l3-4 3 4 M20 6v14",list:"M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01",
+  link:"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71 M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71",
+  img:"M21 15l-5-5L5 21 M21 3H3v18h18V3z M9 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+  code:"M16 18l6-6-6-6 M8 6l-6 6 6 6",quote:"M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z",
 };
 
 /* ═══════════════════════════════════════════
@@ -120,6 +139,7 @@ export default function CiretaBlogCMS() {
   const [delModal,setDelModal]=useState(null);
   const [editId,setEditId]=useState(null);              // listing doc id
   const [detailEditId,setDetailEditId]=useState(null);  // detail doc id
+  const [fmt,setFmt]=useState("markdown");
   const [pane,setPane]=useState("split");
   const [saving,setSaving]=useState(false);
   const [seoOpen,setSeoOpen]=useState(false);
@@ -127,6 +147,9 @@ export default function CiretaBlogCMS() {
   const [schemaOpen,setSchemaOpen]=useState(false);
   const [toast,setToast]=useState(null);
   const taRef=useRef(null);
+
+  const ins=(before,after="")=>{const ta=taRef.current;if(!ta)return;const{selectionStart:s,selectionEnd:e}=ta;const sel=post.content.substring(s,e);setPost(p=>({...p,content:p.content.substring(0,s)+before+sel+after+p.content.substring(e)}));setTimeout(()=>{ta.focus();ta.selectionStart=s+before.length;ta.selectionEnd=s+before.length+sel.length;},0);};
+  const preview=()=>{if(fmt==="html")return post.content;if(fmt==="text")return`<div style="white-space:pre-wrap">${post.content.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>`;return parseMd(post.content);};
 
   const blank={
     title:"", slug:"", content:"", excerpt:"",
@@ -223,6 +246,7 @@ export default function CiretaBlogCMS() {
   const openNew=()=>{
     setEditId(null);setDetailEditId(null);
     setPost({...blank});
+    setFmt("markdown");
     setView("editor");
     setSeoOpen(false);setFaqOpen(false);setSchemaOpen(false);
   };
@@ -424,6 +448,11 @@ export default function CiretaBlogCMS() {
 @keyframes pop{from{transform:translateX(80px);opacity:0}to{transform:translateX(0);opacity:1}}
 input:focus,textarea:focus,select:focus{border-color:#0d9488!important;box-shadow:0 0 0 3px rgba(13,148,136,.12)!important}
 tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hover{opacity:.88}
+.pp h1{font-size:26px;font-weight:800;color:#f1f5f9;margin:0 0 14px}.pp h2{font-size:20px;font-weight:700;color:#e2e8f0;margin:22px 0 10px;padding-bottom:8px;border-bottom:1px solid #1e293b}
+.pp h3{font-size:17px;font-weight:700;color:#e2e8f0;margin:18px 0 8px}.pp p{margin:0 0 12px;line-height:1.8}
+.pp li{margin:3px 0;line-height:1.7}.pp img{max-width:100%;border-radius:8px;margin:8px 0}.pp a{color:#2dd4bf;text-decoration:underline}
+.pp blockquote{border-left:3px solid #0d9488;padding:8px 16px;color:#94a3b8;margin:14px 0;background:#0c1222;border-radius:0 6px 6px 0}
+.pp pre{background:#0c1222;padding:16px;border-radius:8px;overflow-x:auto;border:1px solid #1e293b;margin:12px 0}.pp code{font-family:'JetBrains Mono',monospace}
 *::-webkit-scrollbar{width:5px}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px}
 `}</style>
 
@@ -601,22 +630,30 @@ tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hov
     <textarea style={{...inp,fontFamily:"'DM Sans',sans-serif",minHeight:60,resize:"vertical"}} placeholder="Brief description for the listing card..." rows={2} value={post.excerpt} onChange={e=>setPost(p=>({...p,excerpt:e.target.value}))}/>
   </div>
 
-  {/* CONTENT EDITOR (HTML) */}
+  {/* CONTENT EDITOR */}
   <div style={{marginBottom:20}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
-      <label style={{...lbl,margin:0}}>Content * <span style={{fontWeight:400,textTransform:"none",color:"#475569"}}>(paste full HTML document)</span></label>
-      <div style={{display:"flex",gap:4}}>
+      <label style={{...lbl,margin:0}}>Content *</label>
+      <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+        {["markdown","html","text"].map(m=>(<button key={m} onClick={()=>setFmt(m)} style={{padding:"4px 12px",borderRadius:5,border:"1px solid",fontSize:11,fontWeight:700,cursor:"pointer",textTransform:"uppercase",background:fmt===m?"#0d948820":"transparent",borderColor:fmt===m?"#0d9488":"#1e293b",color:fmt===m?"#2dd4bf":"#475569"}}>{m}</button>))}
+        <div style={{width:1,background:"#1e293b",margin:"0 4px"}}/>
         {[["editor","Edit"],["split","Split"],["preview","Preview"]].map(([k,l])=>(<button key={k} onClick={()=>setPane(k)} style={{padding:"4px 12px",borderRadius:5,border:"1px solid",fontSize:11,fontWeight:700,cursor:"pointer",background:pane===k?"#1e293b":"transparent",borderColor:pane===k?"#334155":"#1e293b",color:pane===k?"#e2e8f0":"#475569"}}>{l}</button>))}
       </div>
     </div>
-    <div style={{display:"flex",border:"1px solid #1e293b",borderRadius:"8px",overflow:"hidden",minHeight:420}}>
+    {fmt==="markdown"&&pane!=="preview"&&<div style={{display:"flex",gap:1,padding:"7px 10px",background:"#111827",borderRadius:"8px 8px 0 0",border:"1px solid #1e293b",borderBottom:"none",flexWrap:"wrap"}}>
+      {[["B",ic.bold,()=>ins("**","**")],["I",ic.italic,()=>ins("*","*")],["H2",ic.h2,()=>ins("## ")],["UL",ic.list,()=>ins("- ")],["Link",ic.link,()=>ins("[","](url)")],["Img",ic.img,()=>ins("![alt](",")")],["Code",ic.code,()=>ins("```\n","\n```")],["Q",ic.quote,()=>ins("> ")]].map(([t,d,fn])=>(
+        <button key={t} onClick={fn} title={t} style={{padding:"5px 9px",background:"transparent",border:"none",color:"#64748b",cursor:"pointer",borderRadius:5,display:"flex",alignItems:"center"}}><I d={d} s={15}/></button>))}
+    </div>}
+    <div style={{display:"flex",border:"1px solid #1e293b",borderRadius:fmt==="markdown"&&pane!=="preview"?"0 0 8px 8px":"8px",overflow:"hidden",minHeight:420}}>
       {pane!=="preview"&&<div style={{flex:1,display:"flex",flexDirection:"column"}}>
-        <textarea ref={taRef} style={{width:"100%",flex:1,padding:"14px 16px",border:"none",background:"#0a0f1e",color:"#e2e8f0",fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"'JetBrains Mono',monospace",resize:"none",lineHeight:1.7,minHeight:420}}
-          placeholder={`<!DOCTYPE html>\n<html>\n<head>...</head>\n<body>\n  <article>...</article>\n</body>\n</html>`} value={post.content} onChange={e=>setPost(p=>({...p,content:e.target.value}))}/>
+        <textarea ref={taRef} style={{width:"100%",flex:1,padding:"14px 16px",border:"none",background:"#0a0f1e",color:"#e2e8f0",fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:fmt==="text"?"'DM Sans',sans-serif":"'JetBrains Mono',monospace",resize:"none",lineHeight:1.7,minHeight:420}}
+          placeholder={fmt==="markdown"?"# Your heading\n\nWrite in **Markdown**...":fmt==="html"?"<h2>HTML content</h2>":"Plain text..."} value={post.content} onChange={e=>setPost(p=>({...p,content:e.target.value}))}/>
       </div>}
       {pane!=="editor"&&<div style={{flex:1,borderLeft:pane==="split"?"1px solid #1e293b":"none",display:"flex",flexDirection:"column"}}>
-        <div style={{padding:"6px 14px",background:"#111827",fontSize:10,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:".6px",borderBottom:"1px solid #1e293b"}}>Preview (isolated iframe)</div>
-        <iframe title="preview" srcDoc={post.content} style={{flex:1,border:"none",background:"#fff",minHeight:420}}/>
+        <div style={{padding:"6px 14px",background:"#111827",fontSize:10,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:".6px",borderBottom:"1px solid #1e293b"}}>Preview</div>
+        {fmt==="html"
+          ?<iframe title="preview" srcDoc={post.content} style={{flex:1,border:"none",background:"#fff",minHeight:420}}/>
+          :<div className="pp" style={{padding:22,background:"#0a0f1e",flex:1,overflow:"auto",fontSize:15,color:"#cbd5e1",lineHeight:1.8}} dangerouslySetInnerHTML={{__html:preview()}}/>}
       </div>}
     </div>
   </div>
