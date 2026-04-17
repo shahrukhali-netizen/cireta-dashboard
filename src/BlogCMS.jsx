@@ -78,6 +78,7 @@ const listingDoc = (id) => FM.doc(db, ...LISTING_PATH, id);
 const detailDoc = (id) => FM.doc(db, ...DETAIL_PATH, id);
 
 const fullImgUrl = (rel) => rel ? (rel.startsWith("http") ? rel : `${CDN_BASE}${rel}`) : "";
+const stripCdnBase = (url) => url ? url.replace(CDN_BASE, "") : "";
 
 function buildSchemas(p){
   const o=[];
@@ -581,8 +582,8 @@ export default function CiretaBlogCMS() {
       ?post.tags.split(",").map(t=>t.trim()).filter(Boolean)
       :(post.tags||[]);
 
-    // Resolve to full URL so public site can use it directly
-    const resolvedImg = fullImgUrl(post.imgUrl);
+    // Always store relative path — public site prepends CDN_BASE itself
+    const relImg = stripCdnBase(post.imgUrl);
 
     const listingData={
       title:post.title,
@@ -591,7 +592,7 @@ export default function CiretaBlogCMS() {
       category:post.category||"blog",
       active,
       is_featured:!!post.isFeatured,
-      imgUrl:resolvedImg,
+      imgUrl:relImg,
       date:dateMs,
     };
     const detailData={
@@ -599,7 +600,7 @@ export default function CiretaBlogCMS() {
       "blog-link":sl,
       content:post.content,
       active,
-      imgUrl:resolvedImg,
+      imgUrl:relImg,
       date:dateMs,
       excerpt:post.excerpt||"",
       category:post.category||"blog",
