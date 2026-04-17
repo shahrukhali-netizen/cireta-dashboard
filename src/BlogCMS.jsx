@@ -313,6 +313,9 @@ export default function CiretaBlogCMS() {
       ?post.tags.split(",").map(t=>t.trim()).filter(Boolean)
       :(post.tags||[]);
 
+    // Resolve to full URL so public site can use it directly
+    const resolvedImg = fullImgUrl(post.imgUrl);
+
     // Core listing fields (matches existing schema consumed by public site)
     const listingData={
       title:post.title,
@@ -321,7 +324,7 @@ export default function CiretaBlogCMS() {
       category:post.category||"blog",
       active,
       is_featured:!!post.isFeatured,
-      imgUrl:post.imgUrl||"",
+      imgUrl:resolvedImg,
       date:dateMs,
     };
     // Detail = core fields public site uses + extra authoring fields persisted for future use
@@ -330,7 +333,7 @@ export default function CiretaBlogCMS() {
       "blog-link":sl,
       content:post.content,
       active,
-      imgUrl:post.imgUrl||"",
+      imgUrl:resolvedImg,
       date:dateMs,
       // Extra authoring fields (ignored by current public site, kept for future)
       excerpt:post.excerpt||"",
