@@ -945,9 +945,6 @@ tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hov
     <div style={{flex:2,minWidth:200}}><label style={lbl}>Tags (comma-separated)</label><input style={inp} placeholder="rwa, tokenization, gold" value={Array.isArray(post.tags)?post.tags.join(", "):post.tags} onChange={e=>setPost(p=>({...p,tags:e.target.value}))}/></div>
     <div style={{flex:1,minWidth:140}}><label style={lbl}>Read Time</label><input style={inp} placeholder="5 min read" value={post.readTime} onChange={e=>setPost(p=>({...p,readTime:e.target.value}))}/></div>
   </div>
-  <div style={{marginBottom:18}}><label style={lbl}>Author Description</label>
-    <textarea style={{...inp,fontFamily:"'DM Sans',sans-serif",minHeight:46,resize:"vertical"}} placeholder="Brief bio..." rows={2} value={post.authorDescription} onChange={e=>setPost(p=>({...p,authorDescription:e.target.value}))}/>
-  </div>
 
   {/* SEO */}
   <div style={{background:"#111827",border:"1px solid #1e293b",borderRadius:10,marginBottom:14,overflow:"hidden"}}>
