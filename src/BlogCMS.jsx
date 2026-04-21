@@ -61,7 +61,7 @@ function isAllowedEmail(email) {
    CATEGORIES (values match existing Firestore + public site)
    ═══════════════════════════════════════════ */
 const CATEGORIES = [
-  { value: "blog", label: "Blog", color: "#0d9488", bg: "#0d948820" },
+  { value: "blog", label: "Blog", color: "#13636f", bg: "#13636f20" },
   { value: "top-story", label: "Top Stories", color: "#f59e0b", bg: "#f59e0b20" },
   { value: "press", label: "Press", color: "#8b5cf6", bg: "#8b5cf620" },
 ];
@@ -78,6 +78,7 @@ const listingDoc = (id) => FM.doc(db, ...LISTING_PATH, id);
 const detailDoc = (id) => FM.doc(db, ...DETAIL_PATH, id);
 
 const fullImgUrl = (rel) => rel ? (rel.startsWith("http") ? rel : `${CDN_BASE}${rel}`) : "";
+const stripCdnBase = (url) => url ? url.replace(CDN_BASE, "") : "";
 
 function buildSchemas(p){
   const o=[];
@@ -122,8 +123,8 @@ const ic={
    ═══════════════════════════════════════════ */
 const TBtn = ({ onClick, active, title, children, style: s }) => (
   <button onClick={onClick} title={title} style={{
-    padding:"5px 8px",background:active?"#0d948830":"transparent",border:"none",
-    color:active?"#2dd4bf":"#64748b",cursor:"pointer",borderRadius:5,
+    padding:"5px 8px",background:active?"#13636f30":"transparent",border:"none",
+    color:active?"#13636f":"#6b7280",cursor:"pointer",borderRadius:5,
     display:"flex",alignItems:"center",justifyContent:"center",minWidth:28,...s
   }}>{children}</button>
 );
@@ -137,9 +138,9 @@ class EditorErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{padding:20,background:"#450a0a",border:"1px solid #991b1b",borderRadius:8,color:"#fca5a5",fontSize:13}}>
+        <div style={{padding:20,background:"#fee2e2",border:"1px solid #991b1b",borderRadius:8,color:"#dc2626",fontSize:13}}>
           <strong>Editor error:</strong> {this.state.error?.message || "Unknown"}
-          <br/><button onClick={()=>this.setState({hasError:false,error:null})} style={{marginTop:10,padding:"6px 14px",borderRadius:6,border:"1px solid #991b1b",background:"transparent",color:"#fca5a5",cursor:"pointer",fontSize:12}}>Retry</button>
+          <br/><button onClick={()=>this.setState({hasError:false,error:null})} style={{marginTop:10,padding:"6px 14px",borderRadius:6,border:"1px solid #991b1b",background:"transparent",color:"#dc2626",cursor:"pointer",fontSize:12}}>Retry</button>
         </div>
       );
     }
@@ -198,20 +199,20 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
 
   if (!editor) return null;
 
-  const COLORS = ["#ef4444","#f59e0b","#22c55e","#3b82f6","#8b5cf6","#ec4899","#e2e8f0","#0d9488"];
+  const COLORS = ["#ef4444","#f59e0b","#22c55e","#3b82f6","#8b5cf6","#ec4899","#1f2937","#13636f"];
   const HIGHLIGHT_COLORS = ["#fef08a","#bbf7d0","#bfdbfe","#e9d5ff","#fecdd3","#fed7aa"];
 
   if (showSource) {
     return (
       <div style={{display:"flex",flexDirection:"column",minHeight:420}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#111827",borderBottom:"1px solid #1e293b"}}>
-          <span style={{fontSize:11,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:".6px"}}>HTML Source</span>
-          <button onClick={()=>{applySource();onToggleSource();}} style={{padding:"4px 12px",borderRadius:5,border:"1px solid #0d9488",background:"#0d948820",color:"#2dd4bf",fontSize:11,fontWeight:700,cursor:"pointer"}}>Apply & Close</button>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#ffffff",borderBottom:"1px solid #e5e7eb"}}>
+          <span style={{fontSize:11,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".6px"}}>HTML Source</span>
+          <button onClick={()=>{applySource();onToggleSource();}} style={{padding:"4px 12px",borderRadius:5,border:"1px solid #13636f",background:"#13636f20",color:"#13636f",fontSize:11,fontWeight:700,cursor:"pointer"}}>Apply & Close</button>
         </div>
         <textarea
           value={sourceCode}
           onChange={e=>setSourceCode(e.target.value)}
-          style={{width:"100%",flex:1,padding:"14px 16px",border:"none",background:"#0a0f1e",color:"#5eead4",fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"'JetBrains Mono',monospace",resize:"none",lineHeight:1.7,minHeight:420}}
+          style={{width:"100%",flex:1,padding:"14px 16px",border:"none",background:"#ffffff",color:"#1a7a88",fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"'JetBrains Mono',monospace",resize:"none",lineHeight:1.7,minHeight:420}}
         />
       </div>
     );
@@ -220,7 +221,7 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
   return (
     <div>
       {/* Toolbar */}
-      <div style={{display:"flex",flexWrap:"wrap",gap:1,padding:"6px 8px",background:"#111827",borderBottom:"1px solid #1e293b",alignItems:"center"}}>
+      <div style={{display:"flex",flexWrap:"wrap",gap:1,padding:"6px 8px",background:"#ffffff",borderBottom:"1px solid #e5e7eb",alignItems:"center"}}>
         {/* Headings dropdown */}
         <select
           value={editor.isActive("heading",{level:1})?"h1":editor.isActive("heading",{level:2})?"h2":editor.isActive("heading",{level:3})?"h3":editor.isActive("heading",{level:4})?"h4":"p"}
@@ -229,7 +230,7 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
             if(v==="p") editor.chain().focus().setParagraph().run();
             else editor.chain().focus().toggleHeading({level:parseInt(v[1])}).run();
           }}
-          style={{padding:"4px 6px",borderRadius:5,border:"1px solid #1e293b",background:"#0f172a",color:"#e2e8f0",fontSize:11,fontWeight:600,cursor:"pointer",outline:"none",minWidth:90}}
+          style={{padding:"4px 6px",borderRadius:5,border:"1px solid #e5e7eb",background:"#f9fafb",color:"#1f2937",fontSize:11,fontWeight:600,cursor:"pointer",outline:"none",minWidth:90}}
         >
           <option value="p">Paragraph</option>
           <option value="h1">Heading 1</option>
@@ -238,7 +239,7 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
           <option value="h4">Heading 4</option>
         </select>
 
-        <div style={{width:1,height:20,background:"#1e293b",margin:"0 4px"}}/>
+        <div style={{width:1,height:20,background:"#e5e7eb",margin:"0 4px"}}/>
 
         {/* Text formatting */}
         <TBtn onClick={()=>editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold (Ctrl+B)">
@@ -254,23 +255,23 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
           <span style={{textDecoration:"line-through",fontWeight:600,fontSize:14,color:"inherit"}}>S</span>
         </TBtn>
 
-        <div style={{width:1,height:20,background:"#1e293b",margin:"0 4px"}}/>
+        <div style={{width:1,height:20,background:"#e5e7eb",margin:"0 4px"}}/>
 
         {/* Color picker */}
         <div style={{position:"relative"}}>
           <TBtn onClick={()=>setShowColorPicker(!showColorPicker)} title="Text Color">
-            <span style={{fontSize:14,fontWeight:700,borderBottom:"3px solid "+( editor.getAttributes("textStyle").color||"#e2e8f0")}}>A</span>
+            <span style={{fontSize:14,fontWeight:700,borderBottom:"3px solid "+( editor.getAttributes("textStyle").color||"#1f2937")}}>A</span>
           </TBtn>
-          {showColorPicker&&<div style={{position:"absolute",top:"100%",left:0,zIndex:50,background:"#111827",border:"1px solid #1e293b",borderRadius:8,padding:8,display:"flex",flexDirection:"column",gap:6,minWidth:160}}>
-            <div style={{fontSize:10,fontWeight:700,color:"#475569",textTransform:"uppercase"}}>Text Color</div>
+          {showColorPicker&&<div style={{position:"absolute",top:"100%",left:0,zIndex:50,background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:8,padding:8,display:"flex",flexDirection:"column",gap:6,minWidth:160}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase"}}>Text Color</div>
             <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
               {COLORS.map(c=><button key={c} onClick={()=>{editor.chain().focus().setColor(c).run();setShowColorPicker(false);}} style={{width:22,height:22,borderRadius:4,background:c,border:"2px solid "+(editor.getAttributes("textStyle").color===c?"#fff":"transparent"),cursor:"pointer"}}/>)}
-              <button onClick={()=>{editor.chain().focus().unsetColor().run();setShowColorPicker(false);}} style={{padding:"2px 8px",borderRadius:4,border:"1px solid #334155",background:"transparent",color:"#64748b",cursor:"pointer",fontSize:10}}>Reset</button>
+              <button onClick={()=>{editor.chain().focus().unsetColor().run();setShowColorPicker(false);}} style={{padding:"2px 8px",borderRadius:4,border:"1px solid #d1d5db",background:"transparent",color:"#6b7280",cursor:"pointer",fontSize:10}}>Reset</button>
             </div>
-            <div style={{fontSize:10,fontWeight:700,color:"#475569",textTransform:"uppercase",marginTop:4}}>Highlight</div>
+            <div style={{fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",marginTop:4}}>Highlight</div>
             <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
               {HIGHLIGHT_COLORS.map(c=><button key={c} onClick={()=>{editor.chain().focus().toggleHighlight({color:c}).run();setShowColorPicker(false);}} style={{width:22,height:22,borderRadius:4,background:c,border:"2px solid transparent",cursor:"pointer"}}/>)}
-              <button onClick={()=>{editor.chain().focus().unsetHighlight().run();setShowColorPicker(false);}} style={{padding:"2px 8px",borderRadius:4,border:"1px solid #334155",background:"transparent",color:"#64748b",cursor:"pointer",fontSize:10}}>Reset</button>
+              <button onClick={()=>{editor.chain().focus().unsetHighlight().run();setShowColorPicker(false);}} style={{padding:"2px 8px",borderRadius:4,border:"1px solid #d1d5db",background:"transparent",color:"#6b7280",cursor:"pointer",fontSize:10}}>Reset</button>
             </div>
           </div>}
         </div>
@@ -279,7 +280,7 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
           <span style={{fontSize:12,fontWeight:700,background:"#fef08a",color:"#000",padding:"0 3px",borderRadius:2}}>H</span>
         </TBtn>
 
-        <div style={{width:1,height:20,background:"#1e293b",margin:"0 4px"}}/>
+        <div style={{width:1,height:20,background:"#e5e7eb",margin:"0 4px"}}/>
 
         {/* Lists */}
         <TBtn onClick={()=>editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
@@ -292,7 +293,7 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="6" height="6" rx="1"/><polyline points="5 8 6.5 9.5 9 6.5"/><line x1="13" y1="8" x2="21" y2="8"/><rect x="3" y="13" width="6" height="6" rx="1"/><line x1="13" y1="16" x2="21" y2="16"/></svg>
         </TBtn>
 
-        <div style={{width:1,height:20,background:"#1e293b",margin:"0 4px"}}/>
+        <div style={{width:1,height:20,background:"#e5e7eb",margin:"0 4px"}}/>
 
         {/* Alignment */}
         <TBtn onClick={()=>editor.chain().focus().setTextAlign("left").run()} active={editor.isActive({textAlign:"left"})} title="Align Left">
@@ -305,7 +306,7 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>
         </TBtn>
 
-        <div style={{width:1,height:20,background:"#1e293b",margin:"0 4px"}}/>
+        <div style={{width:1,height:20,background:"#e5e7eb",margin:"0 4px"}}/>
 
         {/* Block elements */}
         <TBtn onClick={()=>editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Quote">
@@ -318,7 +319,7 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"/></svg>
         </TBtn>
 
-        <div style={{width:1,height:20,background:"#1e293b",margin:"0 4px"}}/>
+        <div style={{width:1,height:20,background:"#e5e7eb",margin:"0 4px"}}/>
 
         {/* Link */}
         <div style={{position:"relative"}}>
@@ -328,9 +329,9 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
           }} active={editor.isActive("link")} title="Link">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
           </TBtn>
-          {showLinkInput&&<div style={{position:"absolute",top:"100%",left:0,zIndex:50,background:"#111827",border:"1px solid #1e293b",borderRadius:8,padding:8,display:"flex",gap:4,minWidth:260}}>
-            <input value={linkUrl} onChange={e=>setLinkUrl(e.target.value)} placeholder="https://..." style={{flex:1,padding:"6px 10px",borderRadius:5,border:"1px solid #1e293b",background:"#0f172a",color:"#e2e8f0",fontSize:12,outline:"none"}} onKeyDown={e=>{if(e.key==="Enter"){editor.chain().focus().setLink({href:linkUrl}).run();setShowLinkInput(false);}}}/>
-            <button onClick={()=>{editor.chain().focus().setLink({href:linkUrl}).run();setShowLinkInput(false);}} style={{padding:"6px 10px",borderRadius:5,border:"none",background:"#0d9488",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>Set</button>
+          {showLinkInput&&<div style={{position:"absolute",top:"100%",left:0,zIndex:50,background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:8,padding:8,display:"flex",gap:4,minWidth:260}}>
+            <input value={linkUrl} onChange={e=>setLinkUrl(e.target.value)} placeholder="https://..." style={{flex:1,padding:"6px 10px",borderRadius:5,border:"1px solid #e5e7eb",background:"#f9fafb",color:"#1f2937",fontSize:12,outline:"none"}} onKeyDown={e=>{if(e.key==="Enter"){editor.chain().focus().setLink({href:linkUrl}).run();setShowLinkInput(false);}}}/>
+            <button onClick={()=>{editor.chain().focus().setLink({href:linkUrl}).run();setShowLinkInput(false);}} style={{padding:"6px 10px",borderRadius:5,border:"none",background:"#13636f",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>Set</button>
           </div>}
         </div>
 
@@ -339,9 +340,9 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
           <TBtn onClick={()=>setShowImgInput(!showImgInput)} title="Insert Image">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M21 15l-5-5L5 21"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
           </TBtn>
-          {showImgInput&&<div style={{position:"absolute",top:"100%",left:0,zIndex:50,background:"#111827",border:"1px solid #1e293b",borderRadius:8,padding:8,display:"flex",gap:4,minWidth:280}}>
-            <input value={imgUrl} onChange={e=>setImgUrl(e.target.value)} placeholder="Image URL..." style={{flex:1,padding:"6px 10px",borderRadius:5,border:"1px solid #1e293b",background:"#0f172a",color:"#e2e8f0",fontSize:12,outline:"none"}} onKeyDown={e=>{if(e.key==="Enter"){editor.chain().focus().setImage({src:imgUrl}).run();setImgUrl("");setShowImgInput(false);}}}/>
-            <button onClick={()=>{editor.chain().focus().setImage({src:imgUrl}).run();setImgUrl("");setShowImgInput(false);}} style={{padding:"6px 10px",borderRadius:5,border:"none",background:"#0d9488",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>Add</button>
+          {showImgInput&&<div style={{position:"absolute",top:"100%",left:0,zIndex:50,background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:8,padding:8,display:"flex",gap:4,minWidth:280}}>
+            <input value={imgUrl} onChange={e=>setImgUrl(e.target.value)} placeholder="Image URL..." style={{flex:1,padding:"6px 10px",borderRadius:5,border:"1px solid #e5e7eb",background:"#f9fafb",color:"#1f2937",fontSize:12,outline:"none"}} onKeyDown={e=>{if(e.key==="Enter"){editor.chain().focus().setImage({src:imgUrl}).run();setImgUrl("");setShowImgInput(false);}}}/>
+            <button onClick={()=>{editor.chain().focus().setImage({src:imgUrl}).run();setImgUrl("");setShowImgInput(false);}} style={{padding:"6px 10px",borderRadius:5,border:"none",background:"#13636f",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>Add</button>
           </div>}
         </div>
 
@@ -350,7 +351,7 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
           <TBtn onClick={()=>setShowTableMenu(!showTableMenu)} active={editor.isActive("table")} title="Table">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
           </TBtn>
-          {showTableMenu&&<div style={{position:"absolute",top:"100%",left:0,zIndex:50,background:"#111827",border:"1px solid #1e293b",borderRadius:8,padding:8,display:"flex",flexDirection:"column",gap:2,minWidth:160}}>
+          {showTableMenu&&<div style={{position:"absolute",top:"100%",left:0,zIndex:50,background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:8,padding:8,display:"flex",flexDirection:"column",gap:2,minWidth:160}}>
             {[
               ["Insert 3x3 Table",()=>editor.chain().focus().insertTable({rows:3,cols:3,withHeaderRow:true}).run()],
               ["Add Row Above",()=>editor.chain().focus().addRowBefore().run()],
@@ -361,14 +362,14 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
               ["Delete Column",()=>editor.chain().focus().deleteColumn().run()],
               ["Delete Table",()=>editor.chain().focus().deleteTable().run()],
             ].map(([label,fn])=>(
-              <button key={label} onClick={()=>{fn();setShowTableMenu(false);}} style={{padding:"5px 10px",borderRadius:4,border:"none",background:"transparent",color:"#94a3b8",fontSize:11,fontWeight:600,cursor:"pointer",textAlign:"left"}}
-                onMouseEnter={e=>e.target.style.background="#1e293b"} onMouseLeave={e=>e.target.style.background="transparent"}
+              <button key={label} onClick={()=>{fn();setShowTableMenu(false);}} style={{padding:"5px 10px",borderRadius:4,border:"none",background:"transparent",color:"#4b5563",fontSize:11,fontWeight:600,cursor:"pointer",textAlign:"left"}}
+                onMouseEnter={e=>e.target.style.background="#e5e7eb"} onMouseLeave={e=>e.target.style.background="transparent"}
               >{label}</button>
             ))}
           </div>}
         </div>
 
-        <div style={{width:1,height:20,background:"#1e293b",margin:"0 4px"}}/>
+        <div style={{width:1,height:20,background:"#e5e7eb",margin:"0 4px"}}/>
 
         {/* Undo / Redo */}
         <TBtn onClick={()=>editor.chain().focus().undo().run()} title="Undo (Ctrl+Z)">
@@ -433,8 +434,8 @@ export default function CiretaBlogCMS() {
 
   const flash=(m,t="ok")=>{setToast({m,t});setTimeout(()=>setToast(null),3200);};
 
-  const inp={width:"100%",padding:"10px 14px",borderRadius:8,border:"1px solid #1e293b",background:"#0f172a",color:"#e2e8f0",fontSize:14,outline:"none",boxSizing:"border-box"};
-  const lbl={display:"block",fontSize:11,fontWeight:600,color:"#64748b",marginBottom:5,textTransform:"uppercase",letterSpacing:".5px"};
+  const inp={width:"100%",padding:"10px 14px",borderRadius:8,border:"1px solid #e5e7eb",background:"#f9fafb",color:"#1f2937",fontSize:14,outline:"none",boxSizing:"border-box"};
+  const lbl={display:"block",fontSize:11,fontWeight:600,color:"#6b7280",marginBottom:5,textTransform:"uppercase",letterSpacing:".5px"};
 
   /* ── Firebase bootstrap + auth state ── */
   useEffect(()=>{
@@ -581,6 +582,9 @@ export default function CiretaBlogCMS() {
       ?post.tags.split(",").map(t=>t.trim()).filter(Boolean)
       :(post.tags||[]);
 
+    // Always store relative path — public site prepends CDN_BASE itself
+    const relImg = stripCdnBase(post.imgUrl);
+
     const listingData={
       title:post.title,
       link:sl,
@@ -588,7 +592,7 @@ export default function CiretaBlogCMS() {
       category:post.category||"blog",
       active,
       is_featured:!!post.isFeatured,
-      imgUrl:post.imgUrl||"",
+      imgUrl:relImg,
       date:dateMs,
     };
     const detailData={
@@ -596,7 +600,7 @@ export default function CiretaBlogCMS() {
       "blog-link":sl,
       content:post.content,
       active,
-      imgUrl:post.imgUrl||"",
+      imgUrl:relImg,
       date:dateMs,
       excerpt:post.excerpt||"",
       category:post.category||"blog",
@@ -676,10 +680,10 @@ export default function CiretaBlogCMS() {
   /* ── Auth gate ── */
   if (authLoading) {
     return (
-      <div style={{fontFamily:"'DM Sans',system-ui,sans-serif",background:"#080e1e",color:"#94a3b8",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{fontFamily:"'DM Sans',system-ui,sans-serif",background:"#f8fafc",color:"#4b5563",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
         <div style={{textAlign:"center"}}>
-          <div style={{width:44,height:44,border:"3px solid #1e293b",borderTopColor:"#0d9488",borderRadius:"50%",margin:"0 auto 16px",animation:"spin 1s linear infinite"}}/>
+          <div style={{width:44,height:44,border:"3px solid #e5e7eb",borderTopColor:"#13636f",borderRadius:"50%",margin:"0 auto 16px",animation:"spin 1s linear infinite"}}/>
           <div style={{fontSize:13,fontWeight:600}}>Loading...</div>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
@@ -688,99 +692,99 @@ export default function CiretaBlogCMS() {
   }
   if (!user) {
     return (
-      <div style={{fontFamily:"'DM Sans',system-ui,sans-serif",background:"#080e1e",color:"#e2e8f0",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+      <div style={{fontFamily:"'DM Sans',system-ui,sans-serif",background:"#f8fafc",color:"#1f2937",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-        <div style={{maxWidth:380,width:"100%",background:"#111827",border:"1px solid #1e293b",borderRadius:14,padding:"36px 32px",textAlign:"center"}}>
-          <div style={{width:56,height:56,borderRadius:14,background:"linear-gradient(135deg,#0d9488,#065f46)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,color:"#fff",fontWeight:800,margin:"0 auto 20px"}}>C</div>
-          <h2 style={{margin:"0 0 8px",fontSize:20,fontWeight:700,color:"#f1f5f9"}}>Cireta Blog CMS</h2>
-          <p style={{margin:"0 0 28px",fontSize:13,color:"#64748b",lineHeight:1.6}}>Sign in with your <strong style={{color:"#94a3b8"}}>@{ALLOWED_DOMAIN}</strong> Google account to continue.</p>
-          <button onClick={signIn} disabled={signingIn} style={{width:"100%",padding:"12px 18px",borderRadius:9,border:"1px solid #334155",background:"#0f172a",color:"#f1f5f9",fontSize:14,fontWeight:600,cursor:signingIn?"wait":"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10,opacity:signingIn?.6:1}}>
+        <div style={{maxWidth:380,width:"100%",background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:14,padding:"36px 32px",textAlign:"center"}}>
+          <img src="/cireta-logo.svg" alt="Cireta" style={{height:40,margin:"0 auto 20px",display:"block"}}/>
+          <h2 style={{margin:"0 0 8px",fontSize:20,fontWeight:700,color:"#111827"}}>Cireta Blog CMS</h2>
+          <p style={{margin:"0 0 28px",fontSize:13,color:"#6b7280",lineHeight:1.6}}>Sign in with your <strong style={{color:"#4b5563"}}>@{ALLOWED_DOMAIN}</strong> Google account to continue.</p>
+          <button onClick={signIn} disabled={signingIn} style={{width:"100%",padding:"12px 18px",borderRadius:9,border:"1px solid #d1d5db",background:"#f9fafb",color:"#111827",fontSize:14,fontWeight:600,cursor:signingIn?"wait":"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10,opacity:signingIn?.6:1}}>
             <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
             {signingIn?"Signing in...":"Sign in with Google"}
           </button>
-          {authError&&<div style={{marginTop:16,padding:"10px 12px",borderRadius:8,background:"#450a0a",color:"#fca5a5",border:"1px solid #991b1b",fontSize:12,textAlign:"left"}}>{authError}</div>}
-          {fsStatus&&fsStatus!=="Connected"&&<div style={{marginTop:14,fontSize:11,color:"#475569"}}>{fsStatus}</div>}
+          {authError&&<div style={{marginTop:16,padding:"10px 12px",borderRadius:8,background:"#fee2e2",color:"#dc2626",border:"1px solid #991b1b",fontSize:12,textAlign:"left"}}>{authError}</div>}
+          {fsStatus&&fsStatus!=="Connected"&&<div style={{marginTop:14,fontSize:11,color:"#9ca3af"}}>{fsStatus}</div>}
         </div>
       </div>
     );
   }
 
   return(
-<div style={{fontFamily:"'DM Sans',system-ui,sans-serif",background:"#080e1e",color:"#e2e8f0",minHeight:"100vh",position:"relative"}}>
+<div style={{fontFamily:"'DM Sans',system-ui,sans-serif",background:"#f8fafc",color:"#1f2937",minHeight:"100vh",position:"relative"}}>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>{`
 @keyframes fadeUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes pop{from{transform:translateX(80px);opacity:0}to{transform:translateX(0);opacity:1}}
-input:focus,textarea:focus,select:focus{border-color:#0d9488!important;box-shadow:0 0 0 3px rgba(13,148,136,.12)!important}
-tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hover{opacity:.88}
-*::-webkit-scrollbar{width:5px}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px}
+input:focus,textarea:focus,select:focus{border-color:#13636f!important;box-shadow:0 0 0 3px rgba(19,99,111,.12)!important}
+tr:hover td{background:#f3f4f6!important}button{transition:all .15s}button:hover{opacity:.88}
+*::-webkit-scrollbar{width:5px}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:3px}
 
 /* TipTap Editor Styles */
 .tiptap-editor .tiptap{
-  padding:18px 20px;min-height:420px;outline:none;color:#e2e8f0;font-size:15px;line-height:1.8;
-  font-family:'DM Sans',system-ui,sans-serif;background:#0a0f1e;
+  padding:18px 20px;min-height:420px;outline:none;color:#1f2937;font-size:15px;line-height:1.8;
+  font-family:'DM Sans',system-ui,sans-serif;background:#ffffff;
 }
 .tiptap-editor .tiptap p.is-editor-empty:first-child::before{
-  content:attr(data-placeholder);float:left;color:#475569;pointer-events:none;height:0;
+  content:attr(data-placeholder);float:left;color:#9ca3af;pointer-events:none;height:0;
 }
-.tiptap-editor .tiptap h1{font-size:28px;font-weight:800;color:#f1f5f9;margin:0 0 16px;line-height:1.3}
-.tiptap-editor .tiptap h2{font-size:22px;font-weight:700;color:#e2e8f0;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid #1e293b;line-height:1.3}
-.tiptap-editor .tiptap h3{font-size:18px;font-weight:700;color:#e2e8f0;margin:20px 0 10px;line-height:1.3}
-.tiptap-editor .tiptap h4{font-size:16px;font-weight:600;color:#cbd5e1;margin:16px 0 8px;line-height:1.4}
+.tiptap-editor .tiptap h1{font-size:28px;font-weight:800;color:#111827;margin:0 0 16px;line-height:1.3}
+.tiptap-editor .tiptap h2{font-size:22px;font-weight:700;color:#1f2937;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;line-height:1.3}
+.tiptap-editor .tiptap h3{font-size:18px;font-weight:700;color:#1f2937;margin:20px 0 10px;line-height:1.3}
+.tiptap-editor .tiptap h4{font-size:16px;font-weight:600;color:#374151;margin:16px 0 8px;line-height:1.4}
 .tiptap-editor .tiptap p{margin:0 0 12px}
 .tiptap-editor .tiptap ul,.tiptap-editor .tiptap ol{padding-left:24px;margin:8px 0 16px}
 .tiptap-editor .tiptap li{margin:4px 0;line-height:1.7}
 .tiptap-editor .tiptap li p{margin:0}
-.tiptap-editor .tiptap blockquote{border-left:3px solid #0d9488;padding:10px 18px;color:#94a3b8;margin:16px 0;background:#0c1222;border-radius:0 8px 8px 0}
-.tiptap-editor .tiptap pre{background:#0c1222;padding:16px;border-radius:8px;overflow-x:auto;border:1px solid #1e293b;margin:14px 0}
-.tiptap-editor .tiptap pre code{font-family:'JetBrains Mono',monospace;font-size:13px;color:#5eead4;background:none;padding:0}
-.tiptap-editor .tiptap code{background:#1e293b;color:#5eead4;padding:2px 6px;border-radius:4px;font-size:.9em;font-family:'JetBrains Mono',monospace}
-.tiptap-editor .tiptap a{color:#2dd4bf;text-decoration:underline;cursor:pointer}
+.tiptap-editor .tiptap blockquote{border-left:3px solid #13636f;padding:10px 18px;color:#4b5563;margin:16px 0;background:#f3f4f6;border-radius:0 8px 8px 0}
+.tiptap-editor .tiptap pre{background:#f3f4f6;padding:16px;border-radius:8px;overflow-x:auto;border:1px solid #e5e7eb;margin:14px 0}
+.tiptap-editor .tiptap pre code{font-family:'JetBrains Mono',monospace;font-size:13px;color:#1a7a88;background:none;padding:0}
+.tiptap-editor .tiptap code{background:#e5e7eb;color:#1a7a88;padding:2px 6px;border-radius:4px;font-size:.9em;font-family:'JetBrains Mono',monospace}
+.tiptap-editor .tiptap a{color:#13636f;text-decoration:underline;cursor:pointer}
 .tiptap-editor .tiptap img{max-width:100%;border-radius:8px;margin:12px 0;height:auto}
-.tiptap-editor .tiptap hr{border:none;border-top:1px solid #1e293b;margin:24px 0}
+.tiptap-editor .tiptap hr{border:none;border-top:1px solid #e5e7eb;margin:24px 0}
 .tiptap-editor .tiptap mark{background:#fef08a;color:#000;padding:1px 3px;border-radius:2px}
 .tiptap-editor .tiptap table{border-collapse:collapse;width:100%;margin:16px 0;overflow:hidden;border-radius:6px}
-.tiptap-editor .tiptap th,.tiptap-editor .tiptap td{border:1px solid #1e293b;padding:8px 12px;text-align:left;min-width:80px}
-.tiptap-editor .tiptap th{background:#111827;font-weight:700;color:#f1f5f9;font-size:13px}
-.tiptap-editor .tiptap td{background:#0a0f1e}
-.tiptap-editor .tiptap .selectedCell{background:#0d948830!important}
+.tiptap-editor .tiptap th,.tiptap-editor .tiptap td{border:1px solid #e5e7eb;padding:8px 12px;text-align:left;min-width:80px}
+.tiptap-editor .tiptap th{background:#f9fafb;font-weight:700;color:#111827;font-size:13px}
+.tiptap-editor .tiptap td{background:#ffffff}
+.tiptap-editor .tiptap .selectedCell{background:#13636f30!important}
 .tiptap-editor .tiptap ul[data-type="taskList"]{list-style:none;padding-left:4px}
 .tiptap-editor .tiptap ul[data-type="taskList"] li{display:flex;align-items:flex-start;gap:8px}
 .tiptap-editor .tiptap ul[data-type="taskList"] li label{margin-top:4px}
-.tiptap-editor .tiptap ul[data-type="taskList"] li label input[type="checkbox"]{accent-color:#0d9488;width:16px;height:16px}
+.tiptap-editor .tiptap ul[data-type="taskList"] li label input[type="checkbox"]{accent-color:#13636f;width:16px;height:16px}
 `}</style>
 
-{toast&&<div style={{position:"fixed",top:16,right:16,padding:"12px 22px",borderRadius:10,fontSize:13,fontWeight:600,zIndex:9999,animation:"pop .3s ease",background:toast.t==="err"?"#450a0a":"#052e16",color:toast.t==="err"?"#fca5a5":"#6ee7b7",border:`1px solid ${toast.t==="err"?"#991b1b":"#166534"}`}}>{toast.m}</div>}
+{toast&&<div style={{position:"fixed",top:16,right:16,padding:"12px 22px",borderRadius:10,fontSize:13,fontWeight:600,zIndex:9999,animation:"pop .3s ease",background:toast.t==="err"?"#fee2e2":"#d1fae5",color:toast.t==="err"?"#dc2626":"#059669",border:`1px solid ${toast.t==="err"?"#fecaca":"#a7f3d0"}`}}>{toast.m}</div>}
 
 {/* DELETE MODAL */}
 {delModal&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.65)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999}} onClick={()=>setDelModal(null)}>
-  <div style={{background:"#111827",border:"1px solid #1e293b",borderRadius:14,padding:28,maxWidth:380,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
-    <h3 style={{margin:"0 0 10px",color:"#f1f5f9",fontSize:17}}>Delete this post?</h3>
-    <p style={{color:"#94a3b8",fontSize:14,margin:"0 0 22px"}}>Removes from both <code style={{color:"#5eead4"}}>blogs_listing</code> and <code style={{color:"#5eead4"}}>blog_detail</code>. Cannot be undone.</p>
+  <div style={{background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:14,padding:28,maxWidth:380,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
+    <h3 style={{margin:"0 0 10px",color:"#111827",fontSize:17}}>Delete this post?</h3>
+    <p style={{color:"#4b5563",fontSize:14,margin:"0 0 22px"}}>Removes from both <code style={{color:"#1a7a88"}}>blogs_listing</code> and <code style={{color:"#1a7a88"}}>blog_detail</code>. Cannot be undone.</p>
     <div style={{display:"flex",gap:10,justifyContent:"center"}}>
-      <button style={{padding:"9px 20px",borderRadius:8,border:"1px solid #334155",background:"transparent",color:"#94a3b8",cursor:"pointer",fontSize:13,fontWeight:600}} onClick={()=>setDelModal(null)}>Cancel</button>
+      <button style={{padding:"9px 20px",borderRadius:8,border:"1px solid #d1d5db",background:"transparent",color:"#4b5563",cursor:"pointer",fontSize:13,fontWeight:600}} onClick={()=>setDelModal(null)}>Cancel</button>
       <button style={{padding:"9px 20px",borderRadius:8,border:"none",background:"#dc2626",color:"#fff",cursor:"pointer",fontSize:13,fontWeight:600}} onClick={()=>deleteBlog(delModal)}>Delete</button>
     </div>
   </div>
 </div>}
 
 {/* HEADER */}
-<div style={{borderBottom:"1px solid #1e293b",background:"#0b1120"}}>
+<div style={{borderBottom:"1px solid #e5e7eb",background:"#ffffff"}}>
 <div style={{maxWidth:1320,margin:"0 auto",padding:"0 24px",display:"flex",alignItems:"center",justifyContent:"space-between",height:56}}>
   <div style={{display:"flex",alignItems:"center",gap:10}}>
-    {view==="editor"&&<button style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",padding:4,marginRight:4}} onClick={()=>{setView("list");if(fsConnected)loadBlogs();}}><I d={ic.back} s={20}/></button>}
-    <div style={{width:28,height:28,borderRadius:7,background:"linear-gradient(135deg,#0d9488,#065f46)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:"#fff",fontWeight:800}}>C</div>
-    <span style={{fontSize:16,fontWeight:700,color:"#0d9488",letterSpacing:"-.3px"}}>Blog CMS</span>
-    <span style={{fontSize:10,padding:"3px 8px",borderRadius:6,background:fsConnected?"#052e16":"#422006",color:fsConnected?"#4ade80":"#fbbf24",border:`1px solid ${fsConnected?"#166534":"#854d0e"}`,fontWeight:600,marginLeft:4}}>{fsConnected?"Firebase ✓":fsStatus||"Not connected"}</span>
+    {view==="editor"&&<button style={{background:"none",border:"none",color:"#6b7280",cursor:"pointer",padding:4,marginRight:4}} onClick={()=>{setView("list");if(fsConnected)loadBlogs();}}><I d={ic.back} s={20}/></button>}
+    <img src="/cireta-logo.svg" alt="Cireta" style={{height:22}}/>
+    <span style={{fontSize:16,fontWeight:700,color:"#13636f",letterSpacing:"-.3px"}}>Blog CMS</span>
+    <span style={{fontSize:10,padding:"3px 8px",borderRadius:6,background:fsConnected?"#d1fae5":"#fef3c7",color:fsConnected?"#059669":"#d97706",border:`1px solid ${fsConnected?"#a7f3d0":"#fde68a"}`,fontWeight:600,marginLeft:4}}>{fsConnected?"Firebase ✓":fsStatus||"Not connected"}</span>
   </div>
   <div style={{display:"flex",gap:10,alignItems:"center"}}>
-    {view==="list"&&<button style={{padding:"8px 16px",borderRadius:8,border:"none",background:"#0d9488",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:6}} onClick={openNew}><I d={ic.plus} s={15}/>New Post</button>}
-    <div style={{display:"flex",alignItems:"center",gap:8,padding:"4px 6px 4px 10px",borderRadius:20,background:"#0f172a",border:"1px solid #1e293b"}}>
+    {view==="list"&&<button style={{padding:"8px 16px",borderRadius:8,border:"none",background:"#13636f",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:6}} onClick={openNew}><I d={ic.plus} s={15}/>New Post</button>}
+    <div style={{display:"flex",alignItems:"center",gap:8,padding:"4px 6px 4px 10px",borderRadius:20,background:"#f9fafb",border:"1px solid #e5e7eb"}}>
       {user.photoURL
         ?<img src={user.photoURL} alt="" style={{width:24,height:24,borderRadius:"50%"}}/>
-        :<div style={{width:24,height:24,borderRadius:"50%",background:"#1e293b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#94a3b8"}}>{(user.email||"?").charAt(0).toUpperCase()}</div>}
-      <span style={{fontSize:12,color:"#94a3b8",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user.email}</span>
-      <button onClick={signOutUser} title="Sign out" style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",padding:"4px 6px",borderRadius:6,display:"flex",alignItems:"center"}}><I d={ic.x} s={14}/></button>
+        :<div style={{width:24,height:24,borderRadius:"50%",background:"#e5e7eb",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#4b5563"}}>{(user.email||"?").charAt(0).toUpperCase()}</div>}
+      <span style={{fontSize:12,color:"#4b5563",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user.email}</span>
+      <button onClick={signOutUser} title="Sign out" style={{background:"none",border:"none",color:"#6b7280",cursor:"pointer",padding:"4px 6px",borderRadius:6,display:"flex",alignItems:"center"}}><I d={ic.x} s={14}/></button>
     </div>
   </div>
 </div></div>
@@ -790,54 +794,54 @@ tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hov
 {/* ═══════ LIST VIEW ═══════ */}
 {view==="list"&&<div style={{animation:"fadeUp .35s ease"}}>
   <div style={{display:"flex",gap:14,marginBottom:22,flexWrap:"wrap"}}>
-    {[["Total",stats.total,"#6366f1"],["Blog",stats.blog,"#0d9488"],["Top Stories",stats.top,"#f59e0b"],["Press",stats.press,"#8b5cf6"]].map(([l,v,c])=>(
-      <div key={l} style={{background:"#111827",border:"1px solid #1e293b",borderRadius:10,padding:"16px 22px",borderTop:`3px solid ${c}`,flex:1,minWidth:130}}>
-        <div style={{fontSize:11,fontWeight:600,color:"#64748b",textTransform:"uppercase",letterSpacing:".5px"}}>{l}</div>
-        <div style={{fontSize:30,fontWeight:800,color:"#f1f5f9",marginTop:2}}>{v}</div>
+    {[["Total",stats.total,"#6366f1"],["Blog",stats.blog,"#13636f"],["Top Stories",stats.top,"#f59e0b"],["Press",stats.press,"#8b5cf6"]].map(([l,v,c])=>(
+      <div key={l} style={{background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:10,padding:"16px 22px",borderTop:`3px solid ${c}`,flex:1,minWidth:130}}>
+        <div style={{fontSize:11,fontWeight:600,color:"#6b7280",textTransform:"uppercase",letterSpacing:".5px"}}>{l}</div>
+        <div style={{fontSize:30,fontWeight:800,color:"#111827",marginTop:2}}>{v}</div>
       </div>))}
   </div>
   <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
     <div style={{position:"relative",flex:1,minWidth:180}}>
       <input style={{...inp,paddingLeft:36}} placeholder="Search posts..." value={search} onChange={e=>setSearch(e.target.value)}/>
-      <div style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#475569"}}><I d={ic.search} s={15}/></div>
+      <div style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#9ca3af"}}><I d={ic.search} s={15}/></div>
     </div>
     <select style={{...inp,width:"auto",minWidth:140,cursor:"pointer"}} value={catFilter} onChange={e=>setCatFilter(e.target.value)}>
       <option value="all">All Categories</option>
       {CATEGORIES.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}
     </select>
-    {["all","draft","published"].map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"8px 14px",borderRadius:7,border:"1px solid",fontSize:12,fontWeight:600,cursor:"pointer",textTransform:"capitalize",background:filter===f?"#0d948818":"transparent",borderColor:filter===f?"#0d9488":"#1e293b",color:filter===f?"#2dd4bf":"#64748b"}}>{f}</button>))}
+    {["all","draft","published"].map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"8px 14px",borderRadius:7,border:"1px solid",fontSize:12,fontWeight:600,cursor:"pointer",textTransform:"capitalize",background:filter===f?"#13636f18":"transparent",borderColor:filter===f?"#13636f":"#e5e7eb",color:filter===f?"#13636f":"#6b7280"}}>{f}</button>))}
   </div>
-  <div style={{background:"#111827",border:"1px solid #1e293b",borderRadius:12,overflow:"auto"}}>
+  <div style={{background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:12,overflow:"auto"}}>
     {!fsConnected?<div style={{padding:"60px 20px",textAlign:"center"}}>
-      <div style={{width:48,height:48,borderRadius:12,background:"#1e293b",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}><I d={ic.db} s={24} c="#64748b"/></div>
-      <h3 style={{color:"#e2e8f0",margin:"0 0 8px",fontSize:17}}>Connecting to Firestore...</h3>
-      <p style={{color:"#64748b",fontSize:14,margin:"0 0 20px",maxWidth:360,marginLeft:"auto",marginRight:"auto"}}>{fsStatus||"Using config from .env"}</p>
+      <div style={{width:48,height:48,borderRadius:12,background:"#e5e7eb",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}><I d={ic.db} s={24} c="#6b7280"/></div>
+      <h3 style={{color:"#1f2937",margin:"0 0 8px",fontSize:17}}>Connecting to Firestore...</h3>
+      <p style={{color:"#6b7280",fontSize:14,margin:"0 0 20px",maxWidth:360,marginLeft:"auto",marginRight:"auto"}}>{fsStatus||"Using config from .env"}</p>
     </div>
-    :loading?<div style={{padding:60,textAlign:"center",color:"#64748b"}}>Loading...</div>
-    :shown.length===0?<div style={{padding:60,textAlign:"center"}}><p style={{color:"#94a3b8",fontSize:15,margin:0}}>No posts found</p></div>
+    :loading?<div style={{padding:60,textAlign:"center",color:"#6b7280"}}>Loading...</div>
+    :shown.length===0?<div style={{padding:60,textAlign:"center"}}><p style={{color:"#4b5563",fontSize:15,margin:0}}>No posts found</p></div>
     :<table style={{width:"100%",borderCollapse:"collapse"}}>
-      <thead><tr>{["Title","Category","Status","Featured","Image","Date",""].map(h=><th key={h} style={{padding:"11px 16px",textAlign:"left",fontSize:10,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:".6px",borderBottom:"1px solid #1e293b"}}>{h}</th>)}</tr></thead>
+      <thead><tr>{["Title","Category","Status","Featured","Image","Date",""].map(h=><th key={h} style={{padding:"11px 16px",textAlign:"left",fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:".6px",borderBottom:"1px solid #e5e7eb"}}>{h}</th>)}</tr></thead>
       <tbody>{shown.map(b=>{const bcat=getCategory(b.category);return(<tr key={b.id} style={{cursor:"pointer"}} onClick={()=>openEdit(b)}>
-        <td style={{padding:"13px 16px",borderBottom:"1px solid #1e293b10",maxWidth:300}}>
-          <div style={{fontWeight:600,color:"#f1f5f9",fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{b.title||"Untitled"}</div>
-          <div style={{fontSize:11,color:"#475569",marginTop:2}}>/{b.slug||"no-slug"}</div>
+        <td style={{padding:"13px 16px",borderBottom:"1px solid #e5e7eb10",maxWidth:300}}>
+          <div style={{fontWeight:600,color:"#111827",fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{b.title||"Untitled"}</div>
+          <div style={{fontSize:11,color:"#9ca3af",marginTop:2}}>/{b.slug||"no-slug"}</div>
         </td>
-        <td style={{padding:"13px 16px",borderBottom:"1px solid #1e293b10"}}>
+        <td style={{padding:"13px 16px",borderBottom:"1px solid #e5e7eb10"}}>
           <span style={{display:"inline-block",padding:"3px 10px",borderRadius:6,fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".4px",background:bcat.bg,color:bcat.color,border:`1px solid ${bcat.color}40`}}>{bcat.label}</span>
         </td>
-        <td style={{padding:"13px 16px",borderBottom:"1px solid #1e293b10"}}>
-          <span style={{display:"inline-block",padding:"2px 9px",borderRadius:20,fontSize:10,fontWeight:700,textTransform:"uppercase",background:b.active?"#052e16":"#422006",color:b.active?"#4ade80":"#fbbf24"}}>{b.active?"published":"draft"}</span>
+        <td style={{padding:"13px 16px",borderBottom:"1px solid #e5e7eb10"}}>
+          <span style={{display:"inline-block",padding:"2px 9px",borderRadius:20,fontSize:10,fontWeight:700,textTransform:"uppercase",background:b.active?"#d1fae5":"#fef3c7",color:b.active?"#059669":"#d97706"}}>{b.active?"published":"draft"}</span>
         </td>
-        <td style={{padding:"13px 16px",borderBottom:"1px solid #1e293b10"}}>
-          {b.isFeatured?<I d={ic.star} s={16} c="#f59e0b"/>:<span style={{color:"#334155"}}>—</span>}
+        <td style={{padding:"13px 16px",borderBottom:"1px solid #e5e7eb10"}}>
+          {b.isFeatured?<I d={ic.star} s={16} c="#f59e0b"/>:<span style={{color:"#d1d5db"}}>—</span>}
         </td>
-        <td style={{padding:"8px 16px",borderBottom:"1px solid #1e293b10"}}>
-          {b.imgUrl?<img src={fullImgUrl(b.imgUrl)} style={{width:48,height:48,borderRadius:6,objectFit:"cover",border:"1px solid #1e293b"}} alt="" onError={e=>{e.target.style.display="none";}}/>:<span style={{color:"#475569",fontSize:11}}>—</span>}
+        <td style={{padding:"8px 16px",borderBottom:"1px solid #e5e7eb10"}}>
+          {b.imgUrl?<img src={fullImgUrl(b.imgUrl)} style={{width:48,height:48,borderRadius:6,objectFit:"cover",border:"1px solid #e5e7eb"}} alt="" onError={e=>{e.target.style.display="none";}}/>:<span style={{color:"#9ca3af",fontSize:11}}>—</span>}
         </td>
-        <td style={{padding:"13px 16px",borderBottom:"1px solid #1e293b10",color:"#475569",fontSize:12}}>{b.date?new Date(b.date).toLocaleDateString():"—"}</td>
-        <td style={{padding:"13px 16px",borderBottom:"1px solid #1e293b10",textAlign:"right"}} onClick={e=>e.stopPropagation()}>
-          <button style={{background:"none",border:"none",color:"#0d9488",cursor:"pointer",padding:5}} onClick={()=>openEdit(b)}><I d={ic.edit} s={15}/></button>
-          <button style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",padding:5}} onClick={()=>setDelModal(b.id)}><I d={ic.trash} s={15}/></button>
+        <td style={{padding:"13px 16px",borderBottom:"1px solid #e5e7eb10",color:"#9ca3af",fontSize:12}}>{b.date?new Date(b.date).toLocaleDateString():"—"}</td>
+        <td style={{padding:"13px 16px",borderBottom:"1px solid #e5e7eb10",textAlign:"right"}} onClick={e=>e.stopPropagation()}>
+          <button style={{background:"none",border:"none",color:"#13636f",cursor:"pointer",padding:5}} onClick={()=>openEdit(b)}><I d={ic.edit} s={15}/></button>
+          <button style={{background:"none",border:"none",color:"#6b7280",cursor:"pointer",padding:5}} onClick={()=>setDelModal(b.id)}><I d={ic.trash} s={15}/></button>
         </td>
       </tr>);})}</tbody>
     </table>}
@@ -849,28 +853,28 @@ tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hov
   {/* Top bar */}
   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22,flexWrap:"wrap",gap:10}}>
     <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-      <h2 style={{margin:0,fontSize:18,fontWeight:700,color:"#f1f5f9"}}>{editId?"Edit Post":"New Post"}</h2>
+      <h2 style={{margin:0,fontSize:18,fontWeight:700,color:"#111827"}}>{editId?"Edit Post":"New Post"}</h2>
       <span style={{padding:"3px 10px",borderRadius:6,fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".4px",background:currentCat.bg,color:currentCat.color,border:`1px solid ${currentCat.color}40`}}>{currentCat.label}</span>
-      <span style={{padding:"3px 10px",borderRadius:20,fontSize:10,fontWeight:700,textTransform:"uppercase",background:post.status==="published"?"#052e16":"#422006",color:post.status==="published"?"#4ade80":"#fbbf24"}}>{post.status}</span>
+      <span style={{padding:"3px 10px",borderRadius:20,fontSize:10,fontWeight:700,textTransform:"uppercase",background:post.status==="published"?"#d1fae5":"#fef3c7",color:post.status==="published"?"#059669":"#d97706"}}>{post.status}</span>
       {post.isFeatured&&<span style={{padding:"3px 10px",borderRadius:6,fontSize:10,fontWeight:700,textTransform:"uppercase",background:"#f59e0b20",color:"#f59e0b",border:"1px solid #f59e0b40",display:"inline-flex",alignItems:"center",gap:4}}><I d={ic.star} s={11}/>Featured</span>}
     </div>
     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-      <button style={{padding:"9px 18px",borderRadius:8,border:"1px solid #334155",background:"transparent",color:"#94a3b8",cursor:"pointer",fontSize:13,fontWeight:600,display:"flex",alignItems:"center",gap:6}} onClick={()=>saveBlog("draft")} disabled={saving}><I d={ic.save} s={14}/>{saving?"Saving...":"Save Draft"}</button>
-      <button style={{padding:"9px 18px",borderRadius:8,border:"none",background:"#0d9488",color:"#fff",cursor:"pointer",fontSize:13,fontWeight:600,display:"flex",alignItems:"center",gap:6,opacity:saving?.6:1}} onClick={()=>saveBlog("published")} disabled={saving}><I d={ic.send} s={14}/>{post.status==="published"?"Update":"Publish"}</button>
+      <button style={{padding:"9px 18px",borderRadius:8,border:"1px solid #d1d5db",background:"transparent",color:"#4b5563",cursor:"pointer",fontSize:13,fontWeight:600,display:"flex",alignItems:"center",gap:6}} onClick={()=>saveBlog("draft")} disabled={saving}><I d={ic.save} s={14}/>{saving?"Saving...":"Save Draft"}</button>
+      <button style={{padding:"9px 18px",borderRadius:8,border:"none",background:"#13636f",color:"#fff",cursor:"pointer",fontSize:13,fontWeight:600,display:"flex",alignItems:"center",gap:6,opacity:saving?.6:1}} onClick={()=>saveBlog("published")} disabled={saving}><I d={ic.send} s={14}/>{post.status==="published"?"Update":"Publish"}</button>
     </div>
   </div>
 
   {/* Title + Slug */}
   <div style={{display:"flex",gap:14,marginBottom:18,flexWrap:"wrap"}}>
     <div style={{flex:2,minWidth:200}}><label style={lbl}>Title *</label>
-      <input style={{...inp,fontSize:17,fontWeight:700,padding:"13px 14px",color:"#f1f5f9"}} placeholder="Your blog post title..." value={post.title}
+      <input style={{...inp,fontSize:17,fontWeight:700,padding:"13px 14px",color:"#111827"}} placeholder="Your blog post title..." value={post.title}
         onChange={e=>{const t=e.target.value;setPost(p=>({...p,title:t,slug:p.slug?p.slug:toSlug(t)}));}}
         onBlur={()=>{if(!post.slug&&post.title)setPost(p=>({...p,slug:toSlug(p.title)}));}}/>
     </div>
     <div style={{flex:1,minWidth:180}}><label style={lbl}>Slug (link) *</label>
       <div style={{display:"flex",gap:6}}>
         <input style={inp} placeholder="auto-slug" value={post.slug} onChange={e=>setPost(p=>({...p,slug:e.target.value}))}/>
-        <button style={{padding:"8px 12px",borderRadius:8,border:"1px solid #334155",background:"transparent",color:"#64748b",cursor:"pointer",fontSize:13,fontWeight:600}} onClick={()=>setPost(p=>({...p,slug:toSlug(p.title)}))}>&#8635;</button>
+        <button style={{padding:"8px 12px",borderRadius:8,border:"1px solid #d1d5db",background:"transparent",color:"#6b7280",cursor:"pointer",fontSize:13,fontWeight:600}} onClick={()=>setPost(p=>({...p,slug:toSlug(p.title)}))}>&#8635;</button>
       </div>
     </div>
   </div>
@@ -883,8 +887,8 @@ tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hov
         <button key={c.value} onClick={()=>setPost(p=>({...p,category:c.value}))}
           style={{padding:"10px 20px",borderRadius:8,border:"2px solid",fontSize:13,fontWeight:700,cursor:"pointer",letterSpacing:".3px",
             background:post.category===c.value?c.bg:"transparent",
-            borderColor:post.category===c.value?c.color:"#1e293b",
-            color:post.category===c.value?c.color:"#64748b",
+            borderColor:post.category===c.value?c.color:"#e5e7eb",
+            color:post.category===c.value?c.color:"#6b7280",
             flex:"1 1 auto",minWidth:120,textAlign:"center"
           }}>
           {c.label}
@@ -894,25 +898,25 @@ tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hov
   </div>
 
   {/* Featured toggle */}
-  <div style={{marginBottom:18,padding:"14px 18px",background:"#111827",border:"1px solid #1e293b",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+  <div style={{marginBottom:18,padding:"14px 18px",background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
     <div>
-      <div style={{fontSize:13,fontWeight:700,color:"#f1f5f9",display:"flex",alignItems:"center",gap:8}}><I d={ic.star} s={14} c={post.isFeatured?"#f59e0b":"#475569"}/>Featured post</div>
-      <div style={{fontSize:11,color:"#64748b",marginTop:3}}>Featured posts appear in the hero section on cireta.com/insights</div>
+      <div style={{fontSize:13,fontWeight:700,color:"#111827",display:"flex",alignItems:"center",gap:8}}><I d={ic.star} s={14} c={post.isFeatured?"#f59e0b":"#9ca3af"}/>Featured post</div>
+      <div style={{fontSize:11,color:"#6b7280",marginTop:3}}>Featured posts appear in the hero section on cireta.com/insights</div>
     </div>
     <button onClick={()=>setPost(p=>({...p,isFeatured:!p.isFeatured}))}
-      style={{width:44,height:24,borderRadius:12,border:"none",background:post.isFeatured?"#f59e0b":"#334155",position:"relative",cursor:"pointer",transition:"background .2s"}}>
+      style={{width:44,height:24,borderRadius:12,border:"none",background:post.isFeatured?"#f59e0b":"#d1d5db",position:"relative",cursor:"pointer",transition:"background .2s"}}>
       <span style={{position:"absolute",top:2,left:post.isFeatured?22:2,width:20,height:20,borderRadius:"50%",background:"#fff",transition:"left .2s"}}/>
     </button>
   </div>
 
   {/* Image */}
-  <div style={{background:"#111827",border:"1px solid #1e293b",borderRadius:10,marginBottom:18,padding:"18px 20px"}}>
-    <label style={lbl}>Image Path <span style={{fontWeight:400,textTransform:"none",color:"#475569"}}>(relative to cdn.cireta.com/cireta-home/)</span></label>
+  <div style={{background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:10,marginBottom:18,padding:"18px 20px"}}>
+    <label style={lbl}>Image Path <span style={{fontWeight:400,textTransform:"none",color:"#9ca3af"}}>(relative to cdn.cireta.com/cireta-home/)</span></label>
     <input style={{...inp,fontFamily:"'JetBrains Mono',monospace",fontSize:13}} placeholder="insights/my-blog-slug.webp" value={post.imgUrl} onChange={e=>setPost(p=>({...p,imgUrl:e.target.value}))}/>
-    <div style={{fontSize:11,color:"#475569",marginTop:6,lineHeight:1.5}}>
-      Upload image to GCS bucket <code style={{color:"#64748b"}}>cdn.cireta.com/cireta-home/insights/</code>, then paste the relative path. Full URL: <span style={{color:"#64748b",wordBreak:"break-all"}}>{imgUrl||"(not set)"}</span>
+    <div style={{fontSize:11,color:"#9ca3af",marginTop:6,lineHeight:1.5}}>
+      Upload image to GCS bucket <code style={{color:"#6b7280"}}>cdn.cireta.com/cireta-home/insights/</code>, then paste the relative path. Full URL: <span style={{color:"#6b7280",wordBreak:"break-all"}}>{imgUrl||"(not set)"}</span>
     </div>
-    {imgUrl&&<div style={{marginTop:14,borderRadius:10,overflow:"hidden",border:"1px solid #1e293b",background:"#0a0f1e",maxWidth:420}}>
+    {imgUrl&&<div style={{marginTop:14,borderRadius:10,overflow:"hidden",border:"1px solid #e5e7eb",background:"#ffffff",maxWidth:420}}>
       <div style={{aspectRatio:"1592/896"}}>
         <img src={imgUrl} style={{width:"100%",height:"100%",objectFit:"cover"}} alt="preview" onError={e=>{e.target.style.display="none";}}/>
       </div>
@@ -927,7 +931,7 @@ tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hov
   {/* RICH TEXT EDITOR */}
   <div style={{marginBottom:20}}>
     <label style={{...lbl,marginBottom:10}}>Content *</label>
-    <div className="tiptap-editor" style={{border:"1px solid #1e293b",borderRadius:8,overflow:"hidden"}}>
+    <div className="tiptap-editor" style={{border:"1px solid #e5e7eb",borderRadius:8,overflow:"hidden"}}>
       <EditorErrorBoundary key={editorKey}>
         <RichTextEditor
           content={post.content}
@@ -947,30 +951,30 @@ tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hov
   </div>
 
   {/* SEO */}
-  <div style={{background:"#111827",border:"1px solid #1e293b",borderRadius:10,marginBottom:14,overflow:"hidden"}}>
+  <div style={{background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:10,marginBottom:14,overflow:"hidden"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",cursor:"pointer",userSelect:"none"}} onClick={()=>setSeoOpen(!seoOpen)}>
-      <span style={{fontSize:14,fontWeight:700,color:"#f1f5f9"}}>SEO, Open Graph & Canonical <span style={{fontWeight:400,color:"#64748b",fontSize:12}}>(stored for future use)</span></span>
-      <span style={{color:"#475569",transform:seoOpen?"rotate(180deg)":"none",transition:"transform .2s"}}><I d={ic.chev} s={17}/></span>
+      <span style={{fontSize:14,fontWeight:700,color:"#111827"}}>SEO, Open Graph & Canonical <span style={{fontWeight:400,color:"#6b7280",fontSize:12}}>(stored for future use)</span></span>
+      <span style={{color:"#9ca3af",transform:seoOpen?"rotate(180deg)":"none",transition:"transform .2s"}}><I d={ic.chev} s={17}/></span>
     </div>
     {seoOpen&&<div style={{padding:"0 20px 20px"}}>
       <div style={{display:"flex",gap:14,marginBottom:14,flexWrap:"wrap"}}>
-        <div style={{flex:1,minWidth:200}}><label style={lbl}>SEO Title</label><input style={{...inp,background:"#0a0f1e"}} placeholder={post.title||""} value={post.seoTitle} onChange={e=>setPost(p=>({...p,seoTitle:e.target.value}))}/><div style={{fontSize:11,color:(post.seoTitle||post.title||"").length>60?"#f87171":"#475569",marginTop:3}}>{(post.seoTitle||post.title||"").length}/60</div></div>
-        <div style={{flex:1,minWidth:200}}><label style={lbl}>OG Image URL</label><input style={{...inp,background:"#0a0f1e"}} placeholder={imgUrl||""} value={post.ogImage} onChange={e=>setPost(p=>({...p,ogImage:e.target.value}))}/></div>
+        <div style={{flex:1,minWidth:200}}><label style={lbl}>SEO Title</label><input style={{...inp,background:"#ffffff"}} placeholder={post.title||""} value={post.seoTitle} onChange={e=>setPost(p=>({...p,seoTitle:e.target.value}))}/><div style={{fontSize:11,color:(post.seoTitle||post.title||"").length>60?"#dc2626":"#9ca3af",marginTop:3}}>{(post.seoTitle||post.title||"").length}/60</div></div>
+        <div style={{flex:1,minWidth:200}}><label style={lbl}>OG Image URL</label><input style={{...inp,background:"#ffffff"}} placeholder={imgUrl||""} value={post.ogImage} onChange={e=>setPost(p=>({...p,ogImage:e.target.value}))}/></div>
       </div>
       <div style={{marginBottom:16}}><label style={lbl}>SEO Description</label>
-        <textarea style={{...inp,background:"#0a0f1e",fontFamily:"'DM Sans',sans-serif",minHeight:50,resize:"vertical"}} placeholder={post.excerpt||""} rows={2} value={post.seoDescription} onChange={e=>setPost(p=>({...p,seoDescription:e.target.value}))}/>
-        <div style={{fontSize:11,color:(post.seoDescription||post.excerpt||"").length>160?"#f87171":"#475569",marginTop:3}}>{(post.seoDescription||post.excerpt||"").length}/160</div>
+        <textarea style={{...inp,background:"#ffffff",fontFamily:"'DM Sans',sans-serif",minHeight:50,resize:"vertical"}} placeholder={post.excerpt||""} rows={2} value={post.seoDescription} onChange={e=>setPost(p=>({...p,seoDescription:e.target.value}))}/>
+        <div style={{fontSize:11,color:(post.seoDescription||post.excerpt||"").length>160?"#dc2626":"#9ca3af",marginTop:3}}>{(post.seoDescription||post.excerpt||"").length}/160</div>
       </div>
-      <div style={{marginBottom:16,padding:14,background:"#080e1e",borderRadius:8,border:"1px solid #1e293b"}}>
+      <div style={{marginBottom:16,padding:14,background:"#f8fafc",borderRadius:8,border:"1px solid #e5e7eb"}}>
         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
-          <I d={ic.globe} s={14} c="#475569"/>
-          <label style={{...lbl,margin:0,color:"#94a3b8"}}>Canonical URL</label>
+          <I d={ic.globe} s={14} c="#9ca3af"/>
+          <label style={{...lbl,margin:0,color:"#4b5563"}}>Canonical URL</label>
         </div>
-        <input style={{...inp,background:"#0a0f1e"}} placeholder={defaultCanonical} value={post.canonicalUrl} onChange={e=>setPost(p=>({...p,canonicalUrl:e.target.value}))}/>
-        <div style={{fontSize:11,color:"#475569",marginTop:6,lineHeight:1.5}}>Leave blank to default: <span style={{color:"#64748b",fontFamily:"'JetBrains Mono',monospace"}}>{defaultCanonical}</span></div>
+        <input style={{...inp,background:"#ffffff"}} placeholder={defaultCanonical} value={post.canonicalUrl} onChange={e=>setPost(p=>({...p,canonicalUrl:e.target.value}))}/>
+        <div style={{fontSize:11,color:"#9ca3af",marginTop:6,lineHeight:1.5}}>Leave blank to default: <span style={{color:"#6b7280",fontFamily:"'JetBrains Mono',monospace"}}>{defaultCanonical}</span></div>
       </div>
-      <div style={{padding:16,background:"#080e1e",borderRadius:8,border:"1px solid #1e293b"}}>
-        <div style={{fontSize:10,fontWeight:700,color:"#475569",marginBottom:8,textTransform:"uppercase"}}>SERP Preview</div>
+      <div style={{padding:16,background:"#f8fafc",borderRadius:8,border:"1px solid #e5e7eb"}}>
+        <div style={{fontSize:10,fontWeight:700,color:"#9ca3af",marginBottom:8,textTransform:"uppercase"}}>SERP Preview</div>
         <div style={{fontSize:12,color:"#8ab4f8",fontFamily:"Arial,sans-serif",marginBottom:1}}>
           {post.canonicalUrl ? post.canonicalUrl.replace(/^https?:\/\//,"").replace(/\//g," > ") : `cireta.com > insights > ${post.slug||"slug"}`}
         </div>
@@ -981,40 +985,40 @@ tr:hover td{background:#0d142490!important}button{transition:all .15s}button:hov
   </div>
 
   {/* FAQ */}
-  <div style={{background:"#111827",border:"1px solid #1e293b",borderRadius:10,marginBottom:14,overflow:"hidden"}}>
+  <div style={{background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:10,marginBottom:14,overflow:"hidden"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",cursor:"pointer",userSelect:"none"}} onClick={()=>setFaqOpen(!faqOpen)}>
-      <span style={{fontSize:14,fontWeight:700,color:"#f1f5f9"}}>FAQ Items <span style={{fontWeight:400,color:"#64748b",fontSize:12}}>(AEO — Answer Engine Optimization)</span></span>
+      <span style={{fontSize:14,fontWeight:700,color:"#111827"}}>FAQ Items <span style={{fontWeight:400,color:"#6b7280",fontSize:12}}>(AEO — Answer Engine Optimization)</span></span>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
-        {(post.faqItems||[]).length>0&&<span style={{fontSize:11,color:"#2dd4bf",fontWeight:600}}>{post.faqItems.length}</span>}
-        <span style={{color:"#475569",transform:faqOpen?"rotate(180deg)":"none",transition:"transform .2s"}}><I d={ic.chev} s={17}/></span>
+        {(post.faqItems||[]).length>0&&<span style={{fontSize:11,color:"#13636f",fontWeight:600}}>{post.faqItems.length}</span>}
+        <span style={{color:"#9ca3af",transform:faqOpen?"rotate(180deg)":"none",transition:"transform .2s"}}><I d={ic.chev} s={17}/></span>
       </div>
     </div>
     {faqOpen&&<div style={{padding:"0 20px 20px"}}>
-      {(post.faqItems||[]).map((f,i)=>(<div key={i} style={{marginBottom:12,padding:14,background:"#0a0f1e",borderRadius:8,border:"1px solid #1e293b"}}>
+      {(post.faqItems||[]).map((f,i)=>(<div key={i} style={{marginBottom:12,padding:14,background:"#ffffff",borderRadius:8,border:"1px solid #e5e7eb"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <span style={{fontSize:11,fontWeight:700,color:"#475569"}}>Q{i+1}</span>
-          <button style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",padding:3}} onClick={()=>{const items=[...(post.faqItems||[])];items.splice(i,1);setPost(p=>({...p,faqItems:items}));}}><I d={ic.x} s={14}/></button>
+          <span style={{fontSize:11,fontWeight:700,color:"#9ca3af"}}>Q{i+1}</span>
+          <button style={{background:"none",border:"none",color:"#6b7280",cursor:"pointer",padding:3}} onClick={()=>{const items=[...(post.faqItems||[])];items.splice(i,1);setPost(p=>({...p,faqItems:items}));}}><I d={ic.x} s={14}/></button>
         </div>
-        <input style={{...inp,background:"#0f172a",fontSize:13,marginBottom:6}} placeholder="Question" value={f.question} onChange={e=>{const items=[...(post.faqItems||[])];items[i]={...items[i],question:e.target.value};setPost(p=>({...p,faqItems:items}));}}/>
-        <textarea style={{...inp,background:"#0f172a",fontSize:13,fontFamily:"'DM Sans',sans-serif",minHeight:42,resize:"vertical"}} placeholder="Answer" rows={2} value={f.answer} onChange={e=>{const items=[...(post.faqItems||[])];items[i]={...items[i],answer:e.target.value};setPost(p=>({...p,faqItems:items}));}}/>
+        <input style={{...inp,background:"#f9fafb",fontSize:13,marginBottom:6}} placeholder="Question" value={f.question} onChange={e=>{const items=[...(post.faqItems||[])];items[i]={...items[i],question:e.target.value};setPost(p=>({...p,faqItems:items}));}}/>
+        <textarea style={{...inp,background:"#f9fafb",fontSize:13,fontFamily:"'DM Sans',sans-serif",minHeight:42,resize:"vertical"}} placeholder="Answer" rows={2} value={f.answer} onChange={e=>{const items=[...(post.faqItems||[])];items[i]={...items[i],answer:e.target.value};setPost(p=>({...p,faqItems:items}));}}/>
       </div>))}
-      <button style={{padding:"8px 16px",borderRadius:7,border:"1px dashed #334155",background:"transparent",color:"#64748b",cursor:"pointer",fontSize:12,fontWeight:600,display:"flex",alignItems:"center",gap:6}} onClick={()=>setPost(p=>({...p,faqItems:[...(p.faqItems||[]),{question:"",answer:""}]}))}><I d={ic.plus} s={14}/>Add FAQ</button>
+      <button style={{padding:"8px 16px",borderRadius:7,border:"1px dashed #d1d5db",background:"transparent",color:"#6b7280",cursor:"pointer",fontSize:12,fontWeight:600,display:"flex",alignItems:"center",gap:6}} onClick={()=>setPost(p=>({...p,faqItems:[...(p.faqItems||[]),{question:"",answer:""}]}))}><I d={ic.plus} s={14}/>Add FAQ</button>
     </div>}
   </div>
 
   {/* Schema */}
-  <div style={{background:"#111827",border:"1px solid #1e293b",borderRadius:10,marginBottom:40,overflow:"hidden"}}>
+  <div style={{background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:10,marginBottom:40,overflow:"hidden"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",cursor:"pointer",userSelect:"none"}} onClick={()=>setSchemaOpen(!schemaOpen)}>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <span style={{fontSize:14,fontWeight:700,color:"#f1f5f9"}}>Generated JSON-LD Schemas</span>
-        <span style={{fontSize:10,padding:"2px 8px",borderRadius:4,background:"#052e16",color:"#4ade80",fontWeight:700,textTransform:"uppercase",letterSpacing:".3px"}}>Auto</span>
+        <span style={{fontSize:14,fontWeight:700,color:"#111827"}}>Generated JSON-LD Schemas</span>
+        <span style={{fontSize:10,padding:"2px 8px",borderRadius:4,background:"#d1fae5",color:"#059669",fontWeight:700,textTransform:"uppercase",letterSpacing:".3px"}}>Auto</span>
       </div>
-      <span style={{color:"#475569",transform:schemaOpen?"rotate(180deg)":"none",transition:"transform .2s"}}><I d={ic.chev} s={17}/></span>
+      <span style={{color:"#9ca3af",transform:schemaOpen?"rotate(180deg)":"none",transition:"transform .2s"}}><I d={ic.chev} s={17}/></span>
     </div>
     {schemaOpen&&<div style={{padding:"0 20px 20px"}}>
-      <p style={{fontSize:12,color:"#475569",margin:"0 0 10px"}}>Auto-built from your inputs: BlogPosting + BreadcrumbList{(post.faqItems||[]).length>0?" + FAQPage":""}. Saved in <code style={{color:"#5eead4"}}>blog_detail.schemas</code>.</p>
-      <pre style={{background:"#080e1e",padding:16,borderRadius:8,border:"1px solid #1e293b",color:"#5eead4",fontSize:11,fontFamily:"'JetBrains Mono',monospace",overflow:"auto",maxHeight:350,lineHeight:1.6,whiteSpace:"pre-wrap",margin:"0 0 10px"}}>{JSON.stringify(buildSchemas(post),null,2)}</pre>
-      <button style={{padding:"7px 16px",borderRadius:7,border:"1px solid #334155",background:"transparent",color:"#64748b",cursor:"pointer",fontSize:12,fontWeight:600,display:"flex",alignItems:"center",gap:6}} onClick={()=>{navigator.clipboard.writeText(JSON.stringify(buildSchemas(post),null,2));flash("Copied");}}><I d={ic.copy} s={14}/>Copy</button>
+      <p style={{fontSize:12,color:"#9ca3af",margin:"0 0 10px"}}>Auto-built from your inputs: BlogPosting + BreadcrumbList{(post.faqItems||[]).length>0?" + FAQPage":""}. Saved in <code style={{color:"#1a7a88"}}>blog_detail.schemas</code>.</p>
+      <pre style={{background:"#f8fafc",padding:16,borderRadius:8,border:"1px solid #e5e7eb",color:"#1a7a88",fontSize:11,fontFamily:"'JetBrains Mono',monospace",overflow:"auto",maxHeight:350,lineHeight:1.6,whiteSpace:"pre-wrap",margin:"0 0 10px"}}>{JSON.stringify(buildSchemas(post),null,2)}</pre>
+      <button style={{padding:"7px 16px",borderRadius:7,border:"1px solid #d1d5db",background:"transparent",color:"#6b7280",cursor:"pointer",fontSize:12,fontWeight:600,display:"flex",alignItems:"center",gap:6}} onClick={()=>{navigator.clipboard.writeText(JSON.stringify(buildSchemas(post),null,2));flash("Copied");}}><I d={ic.copy} s={14}/>Copy</button>
     </div>}
   </div>
 </div>}
