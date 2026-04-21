@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, ComposedChart, Area, LabelList } from 'recharts';
-import BlogCMS from './BlogCMS';
+import { useNavigate } from 'react-router-dom';
 
 // Backend API URL - auto-detect local vs deployed
 const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -38,6 +38,7 @@ const MENU_ITEMS = {
 };
 
 const CiretaDashboard = () => {
+  const navigate = useNavigate();
   // UI state
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -483,7 +484,7 @@ const CiretaDashboard = () => {
             {MENU_ITEMS.content.map((item) => (
               <button
                 key={item.id}
-                onClick={() => handleTabChange(item.id)}
+                onClick={() => item.id === 'blog-cms' ? navigate('/blog-cms') : handleTabChange(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
                   activeTab === item.id
                     ? 'bg-[#13636f] text-white'
@@ -512,9 +513,6 @@ const CiretaDashboard = () => {
 
       {/* Main Content */}
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} transition-all duration-300`}>
-        {activeTab === 'blog-cms' ? (
-          <BlogCMS />
-        ) : (
         <>
         {/* Header */}
         <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-3 shadow-sm">
@@ -1677,7 +1675,6 @@ const CiretaDashboard = () => {
           </div>
         </div>
         </>
-        )}
       </main>
     </div>
   );
