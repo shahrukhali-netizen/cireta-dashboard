@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, ComposedChart, Area, LabelList } from 'recharts';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import DashboardSidebar from './DashboardSidebar';
+import SharedIcon from './Icon';
 
 // Backend API URL - auto-detect local vs deployed
 const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -14,31 +16,9 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz
 const EMAILS_SHEET_GID = '1842333950';
 const EMAILS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid=${EMAILS_SHEET_GID}`;
 
-// Menu items configuration
-const MENU_ITEMS = {
-  analytics: [
-    { id: 'overview', label: 'Traffic Overview', icon: 'grid' },
-    { id: 'website', label: 'Activity Stats', icon: 'chart' },
-    { id: 'events', label: 'Custom Events', icon: 'zap' },
-    { id: 'demographics', label: 'Demographics', icon: 'users' },
-    { id: 'countries', label: 'Countries', icon: 'globe' },
-    { id: 'sources', label: 'Traffic Sources', icon: 'link' },
-  ],
-  socials: [
-    { id: 'social-overview', label: 'Social Overview', icon: 'share' },
-    { id: 'linkedin', label: 'LinkedIn', icon: 'linkedin' },
-    { id: 'x', label: 'X (Twitter)', icon: 'x' },
-  ],
-  emails: [
-    { id: 'email', label: 'Email Campaigns', icon: 'mail' },
-  ],
-  content: [
-    { id: 'blog-cms', label: 'Blog CMS', icon: 'edit' },
-  ],
-};
-
 const CiretaDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   // UI state
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -338,35 +318,28 @@ const CiretaDashboard = () => {
   // Handle tab change with scroll to top
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
+    if (searchParams.get('tab')) {
+      setSearchParams({}, { replace: true });
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Honor ?tab= query param (e.g. when navigating back from /blog-cms)
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t && t !== activeTab) {
+      setActiveTab(t);
+      setSearchParams({}, { replace: true });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [searchParams, activeTab, setSearchParams]);
 
   // Calculate totals
   const totalLinkedInImpressions = linkedInData.reduce((sum, d) => sum + d.impressions, 0);
   const totalXImpressions = xData.reduce((sum, d) => sum + d.impressions, 0);
   const totalEmails = coldEmailData.reduce((sum, d) => sum + d.sent, 0);
 
-  // Icon components
-  const Icon = ({ name, className = "w-5 h-5" }) => {
-    const icons = {
-      grid: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>,
-      chart: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
-      users: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
-      globe: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-      share: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>,
-      linkedin: <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>,
-      x: <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
-      mail: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
-      zap: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
-      refresh: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
-      calendar: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
-      menu: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
-      chevronLeft: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>,
-      link: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>,
-      edit: <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
-    };
-    return icons[name] || null;
-  };
+  const Icon = SharedIcon;
 
   const tooltipStyle = {
     backgroundColor: '#ffffff',
@@ -396,120 +369,19 @@ const CiretaDashboard = () => {
   // Main dashboard (no login required)
   return (
     <div className="min-h-screen bg-[#f8fafc] flex">
-      {/* Sidebar */}
-      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300 fixed h-full z-40 shadow-sm`}>
-        {/* Logo */}
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          {!sidebarCollapsed && (
-            <img src="/cireta-logo.svg" alt="Cireta" className="h-8" />
-          )}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
-          >
-            <Icon name={sidebarCollapsed ? "menu" : "chevronLeft"} className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4">
-          {/* Analytics Section */}
-          <div className="mb-6">
-            {!sidebarCollapsed && (
-              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Analytics</p>
-            )}
-            {MENU_ITEMS.analytics.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleTabChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
-                  activeTab === item.id
-                    ? 'bg-[#13636f] text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#13636f]'
-                }`}
-              >
-                <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" />
-                {!sidebarCollapsed && <span>{item.label}</span>}
-              </button>
-            ))}
-          </div>
-
-          {/* Socials Section */}
-          <div className="mb-6">
-            {!sidebarCollapsed && (
-              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Socials</p>
-            )}
-            {MENU_ITEMS.socials.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleTabChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
-                  activeTab === item.id
-                    ? 'bg-[#13636f] text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#13636f]'
-                }`}
-              >
-                <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" />
-                {!sidebarCollapsed && <span>{item.label}</span>}
-              </button>
-            ))}
-          </div>
-
-          {/* Emails Section */}
-          <div className="mb-6">
-            {!sidebarCollapsed && (
-              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Emails</p>
-            )}
-            {MENU_ITEMS.emails.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleTabChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
-                  activeTab === item.id
-                    ? 'bg-[#13636f] text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#13636f]'
-                }`}
-              >
-                <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" />
-                {!sidebarCollapsed && <span>{item.label}</span>}
-              </button>
-            ))}
-          </div>
-
-          {/* Content Section */}
-          <div className="mb-6">
-            {!sidebarCollapsed && (
-              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Content</p>
-            )}
-            {MENU_ITEMS.content.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => item.id === 'blog-cms' ? navigate('/blog-cms') : handleTabChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
-                  activeTab === item.id
-                    ? 'bg-[#13636f] text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#13636f]'
-                }`}
-              >
-                <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" />
-                {!sidebarCollapsed && <span>{item.label}</span>}
-              </button>
-            ))}
-          </div>
-        </nav>
-
-        {/* GA Connection Status */}
-        <div className="p-4 border-t border-gray-200">
-          <div className={`flex items-center gap-2 ${sidebarCollapsed ? 'justify-center' : ''}`}>
-            <div className={`w-2 h-2 rounded-full ${gaConnected ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
-            {!sidebarCollapsed && (
-              <span className={`text-sm ${gaConnected ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {gaConnected ? 'GA Connected' : 'Using Cache'}
-              </span>
-            )}
-          </div>
-        </div>
-      </aside>
+      <DashboardSidebar
+        activeItem={activeTab}
+        onNavigate={(id) => {
+          if (id === 'blog-cms') {
+            navigate('/blog-cms');
+            return;
+          }
+          handleTabChange(id);
+        }}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={() => setSidebarCollapsed(!sidebarCollapsed)}
+        gaConnected={gaConnected}
+      />
 
       {/* Main Content */}
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} transition-all duration-300`}>

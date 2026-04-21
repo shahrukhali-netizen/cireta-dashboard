@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import CiretaDashboard from './CiretaDashboard';
-import BlogCMS from './BlogCMS';
+import BlogCMSPage from './BlogCMSPage';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/blog-cms" element={<BlogCMS />} />
+        <Route path="/blog-cms" element={<BlogCMSPage />} />
         <Route path="/*" element={<CiretaDashboard />} />
       </Routes>
     </BrowserRouter>

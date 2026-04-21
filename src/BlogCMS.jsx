@@ -179,9 +179,24 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
     ],
     content: content || "",
     onUpdate: ({ editor }) => {
+      lastSyncedContent.current = editor.getHTML();
       onUpdate(editor.getHTML());
     },
   });
+
+  // Track what we last wrote from the parent so we don't fight with local edits.
+  const lastSyncedContent = useRef(content || "");
+
+  // Sync external content changes into the editor (e.g. async fetch on "edit existing post").
+  useEffect(() => {
+    if (!editor) return;
+    const incoming = content || "";
+    if (incoming === lastSyncedContent.current) return;
+    lastSyncedContent.current = incoming;
+    if (editor.getHTML() !== incoming) {
+      editor.commands.setContent(incoming, false);
+    }
+  }, [content, editor]);
 
   // Sync source code when toggling to source view
   useEffect(() => {
