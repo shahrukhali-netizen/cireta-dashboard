@@ -38,19 +38,26 @@ const DETAIL_PATH = ["content", "cireta_home", "blog_detail"];
    ═══════════════════════════════════════════ */
 const FB_CDN = "https://www.gstatic.com/firebasejs/10.12.2";
 const ALLOWED_DOMAIN = "bigimmersive.com";
-let db = null, FM = null, auth = null, AM = null;
+let db = null, FM = null, auth = null, AM = null, storage = null, SM = null;
 
 async function bootFirebase(config) {
-  if (db) return { db, auth };
+  if (db) return { db, auth, storage };
   const { initializeApp } = await import(/* @vite-ignore */ `${FB_CDN}/firebase-app.js`);
   const fsMod = await import(/* @vite-ignore */ `${FB_CDN}/firebase-firestore.js`);
   const authMod = await import(/* @vite-ignore */ `${FB_CDN}/firebase-auth.js`);
+  const storageMod = await import(/* @vite-ignore */ `${FB_CDN}/firebase-storage.js`);
   const app = initializeApp(config);
   db = fsMod.getFirestore(app);
   auth = authMod.getAuth(app);
+  // Target the CDN-fronted bucket — not the default Firebase bucket.
+  // Public URL layout: https://cdn.cireta.com/cireta-home/<path>
+  //   bucket: gs://cdn.cireta.com
+  //   uploads land under "cireta-home/" inside that bucket
+  storage = storageMod.getStorage(app, "gs://cdn.cireta.com");
   FM = fsMod;
   AM = authMod;
-  return { db, auth };
+  SM = storageMod;
+  return { db, auth, storage };
 }
 
 function isAllowedEmail(email) {
@@ -79,6 +86,49 @@ const detailDoc = (id) => FM.doc(db, ...DETAIL_PATH, id);
 
 const fullImgUrl = (rel) => rel ? (rel.startsWith("http") ? rel : `${CDN_BASE}${rel}`) : "";
 const stripCdnBase = (url) => url ? url.replace(CDN_BASE, "") : "";
+
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMG_TYPES = ["image/webp", "image/jpeg", "image/png", "image/gif"];
+
+function safeExt(file) {
+  const fromName = (file.name.split(".").pop() || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (["webp","jpg","jpeg","png","gif"].includes(fromName)) return fromName;
+  if (file.type === "image/webp") return "webp";
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/gif") return "gif";
+  return "jpg";
+}
+
+// Uploads `file` to Firebase Storage at insights/<slug>-<timestamp>.<ext> and resolves with the relative path.
+// onProgress receives 0..100. Rejects on validation/network errors.
+function uploadInsightImage({ file, slug, onProgress }) {
+  return new Promise((resolve, reject) => {
+    if (!storage || !SM) { reject(new Error("Storage not ready — please refresh")); return; }
+    if (!file) { reject(new Error("No file")); return; }
+    if (!ALLOWED_IMG_TYPES.includes(file.type)) {
+      reject(new Error("Only WebP, JPEG, PNG, or GIF images are allowed"));
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      reject(new Error(`Image must be under ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB`));
+      return;
+    }
+    const base = toSlug(slug || "") || "image";
+    // relPath is what we store in Firestore (and what CDN_BASE prepends to form the public URL).
+    // bucketPath is where it lives inside gs://cdn.cireta.com — under the "cireta-home/" prefix
+    // that the CDN domain serves from.
+    const relPath = `insights/${base}-${Date.now()}.${safeExt(file)}`;
+    const bucketPath = `cireta-home/${relPath}`;
+    const sref = SM.ref(storage, bucketPath);
+    const task = SM.uploadBytesResumable(sref, file, { contentType: file.type });
+    task.on(
+      "state_changed",
+      (snap) => { if (onProgress) onProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)); },
+      (err) => reject(err),
+      () => resolve(relPath),
+    );
+  });
+}
 
 function buildSchemas(p){
   const o=[];
@@ -130,6 +180,132 @@ const TBtn = ({ onClick, active, title, children, style: s }) => (
 );
 
 /* ═══════════════════════════════════════════
+   IMAGE UPLOADER (Firebase Storage → insights/)
+   ═══════════════════════════════════════════ */
+function ImageUploader({ value, onChange, slug, onFlash }) {
+  const fileRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
+  const [showManual, setShowManual] = useState(false);
+
+  const preview = fullImgUrl(value);
+
+  const handleFile = useCallback(async (file) => {
+    setUploading(true);
+    setProgress(0);
+    try {
+      const relPath = await uploadInsightImage({
+        file,
+        slug,
+        onProgress: setProgress,
+      });
+      onChange(relPath);
+      onFlash && onFlash("Image uploaded", "ok");
+    } catch (e) {
+      onFlash && onFlash(e.message || "Upload failed", "err");
+    } finally {
+      setUploading(false);
+      setProgress(0);
+    }
+  }, [slug, onChange, onFlash]);
+
+  const onPick = (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) handleFile(f);
+    e.target.value = "";
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  };
+
+  return (
+    <div>
+      <input ref={fileRef} type="file" accept="image/webp,image/jpeg,image/png,image/gif" onChange={onPick} style={{display:"none"}} />
+
+      {!preview && !uploading && (
+        <div
+          onClick={() => fileRef.current && fileRef.current.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={onDrop}
+          style={{
+            border:`2px dashed ${dragOver ? "#13636f" : "#d1d5db"}`,
+            background: dragOver ? "#f0fbfd" : "#f9fafb",
+            borderRadius:10, padding:"28px 20px", textAlign:"center",
+            cursor:"pointer", transition:"all .15s",
+          }}
+        >
+          <div style={{fontSize:26, marginBottom:6}}>📷</div>
+          <div style={{fontSize:14, fontWeight:600, color:"#1f2937", marginBottom:4}}>
+            Click to upload or drag & drop
+          </div>
+          <div style={{fontSize:12, color:"#9ca3af"}}>
+            WebP, JPEG, PNG, or GIF • up to 5 MB
+          </div>
+        </div>
+      )}
+
+      {uploading && (
+        <div style={{border:"1px solid #e5e7eb", background:"#f9fafb", borderRadius:10, padding:"16px 18px"}}>
+          <div style={{fontSize:13, fontWeight:600, color:"#1f2937", marginBottom:10}}>
+            Uploading… {progress}%
+          </div>
+          <div style={{height:6, background:"#e5e7eb", borderRadius:3, overflow:"hidden"}}>
+            <div style={{height:"100%", width:`${progress}%`, background:"#13636f", transition:"width .15s"}} />
+          </div>
+        </div>
+      )}
+
+      {preview && !uploading && (
+        <div style={{border:"1px solid #e5e7eb", borderRadius:10, overflow:"hidden", background:"#ffffff", maxWidth:420}}>
+          <div style={{aspectRatio:"1592/896", background:"#f3f4f6"}}>
+            <img src={preview} alt="preview" style={{width:"100%", height:"100%", objectFit:"cover"}} onError={e=>{e.target.style.display="none";}} />
+          </div>
+          <div style={{display:"flex", gap:8, padding:"10px 12px", borderTop:"1px solid #e5e7eb", alignItems:"center"}}>
+            <button type="button" onClick={() => fileRef.current && fileRef.current.click()}
+              style={{padding:"6px 12px", borderRadius:6, border:"1px solid #d1d5db", background:"#fff", color:"#1f2937", fontSize:12, fontWeight:600, cursor:"pointer"}}>
+              Replace
+            </button>
+            <button type="button" onClick={() => onChange("")}
+              style={{padding:"6px 12px", borderRadius:6, border:"1px solid #fecaca", background:"#fff", color:"#dc2626", fontSize:12, fontWeight:600, cursor:"pointer"}}>
+              Remove
+            </button>
+            <div style={{flex:1, fontSize:11, color:"#9ca3af", fontFamily:"'JetBrains Mono',monospace", wordBreak:"break-all", textAlign:"right"}}>
+              {value}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{marginTop:10}}>
+        <button type="button" onClick={() => setShowManual(v => !v)}
+          style={{background:"none", border:"none", color:"#6b7280", fontSize:11, cursor:"pointer", padding:0, textDecoration:"underline"}}>
+          {showManual ? "Hide manual path" : "Paste existing path instead"}
+        </button>
+        {showManual && (
+          <div style={{marginTop:8}}>
+            <input
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="insights/my-blog-slug.webp"
+              style={{width:"100%", padding:"10px 14px", borderRadius:8, border:"1px solid #e5e7eb", background:"#f9fafb", color:"#1f2937", fontSize:13, outline:"none", fontFamily:"'JetBrains Mono',monospace", boxSizing:"border-box"}}
+            />
+            <div style={{fontSize:11, color:"#9ca3af", marginTop:6}}>
+              Relative to <code style={{color:"#6b7280"}}>{CDN_BASE}</code>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
    TIPTAP RICH TEXT EDITOR
    ═══════════════════════════════════════════ */
 class EditorErrorBoundary extends Component {
@@ -148,7 +324,7 @@ class EditorErrorBoundary extends Component {
   }
 }
 
-function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
+function RichTextEditor({ content, onUpdate, showSource, onToggleSource, slug, onFlash }) {
   const [sourceCode, setSourceCode] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [showLinkInput, setShowLinkInput] = useState(false);
@@ -156,6 +332,9 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
   const [showImgInput, setShowImgInput] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showTableMenu, setShowTableMenu] = useState(false);
+  const [inlineUploading, setInlineUploading] = useState(false);
+  const [inlineProgress, setInlineProgress] = useState(0);
+  const inlineFileRef = useRef(null);
 
   const editor = useEditor({
     extensions: [
@@ -352,12 +531,61 @@ function RichTextEditor({ content, onUpdate, showSource, onToggleSource }) {
 
         {/* Image */}
         <div style={{position:"relative"}}>
+          <input
+            ref={inlineFileRef}
+            type="file"
+            accept="image/webp,image/jpeg,image/png,image/gif"
+            style={{display:"none"}}
+            onChange={async (e) => {
+              const f = e.target.files && e.target.files[0];
+              e.target.value = "";
+              if (!f) return;
+              setInlineUploading(true);
+              setInlineProgress(0);
+              try {
+                const rel = await uploadInsightImage({ file: f, slug, onProgress: setInlineProgress });
+                editor.chain().focus().setImage({ src: fullImgUrl(rel) }).run();
+                onFlash && onFlash("Image inserted", "ok");
+                setShowImgInput(false);
+              } catch (err) {
+                onFlash && onFlash(err.message || "Upload failed", "err");
+              } finally {
+                setInlineUploading(false);
+                setInlineProgress(0);
+              }
+            }}
+          />
           <TBtn onClick={()=>setShowImgInput(!showImgInput)} title="Insert Image">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M21 15l-5-5L5 21"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
           </TBtn>
-          {showImgInput&&<div style={{position:"absolute",top:"100%",left:0,zIndex:50,background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:8,padding:8,display:"flex",gap:4,minWidth:280}}>
-            <input value={imgUrl} onChange={e=>setImgUrl(e.target.value)} placeholder="Image URL..." style={{flex:1,padding:"6px 10px",borderRadius:5,border:"1px solid #e5e7eb",background:"#f9fafb",color:"#1f2937",fontSize:12,outline:"none"}} onKeyDown={e=>{if(e.key==="Enter"){editor.chain().focus().setImage({src:imgUrl}).run();setImgUrl("");setShowImgInput(false);}}}/>
-            <button onClick={()=>{editor.chain().focus().setImage({src:imgUrl}).run();setImgUrl("");setShowImgInput(false);}} style={{padding:"6px 10px",borderRadius:5,border:"none",background:"#13636f",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>Add</button>
+          {showImgInput&&<div style={{position:"absolute",top:"100%",left:0,zIndex:50,background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:8,padding:10,display:"flex",flexDirection:"column",gap:8,minWidth:320}}>
+            {inlineUploading ? (
+              <div>
+                <div style={{fontSize:11,fontWeight:600,color:"#1f2937",marginBottom:6}}>Uploading… {inlineProgress}%</div>
+                <div style={{height:5,background:"#e5e7eb",borderRadius:3,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${inlineProgress}%`,background:"#13636f",transition:"width .15s"}}/>
+                </div>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={()=>inlineFileRef.current && inlineFileRef.current.click()}
+                  style={{padding:"8px 12px",borderRadius:6,border:"1px solid #13636f",background:"#13636f",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Upload Image
+                </button>
+                <div style={{display:"flex",alignItems:"center",gap:6,fontSize:10,color:"#9ca3af"}}>
+                  <div style={{flex:1,height:1,background:"#e5e7eb"}}/>
+                  or paste URL
+                  <div style={{flex:1,height:1,background:"#e5e7eb"}}/>
+                </div>
+                <div style={{display:"flex",gap:4}}>
+                  <input value={imgUrl} onChange={e=>setImgUrl(e.target.value)} placeholder="https://..." style={{flex:1,padding:"6px 10px",borderRadius:5,border:"1px solid #e5e7eb",background:"#f9fafb",color:"#1f2937",fontSize:12,outline:"none"}} onKeyDown={e=>{if(e.key==="Enter"&&imgUrl){editor.chain().focus().setImage({src:imgUrl}).run();setImgUrl("");setShowImgInput(false);}}}/>
+                  <button onClick={()=>{if(imgUrl){editor.chain().focus().setImage({src:imgUrl}).run();setImgUrl("");setShowImgInput(false);}}} style={{padding:"6px 10px",borderRadius:5,border:"none",background:"#13636f",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>Add</button>
+                </div>
+              </>
+            )}
           </div>}
         </div>
 
@@ -926,16 +1154,13 @@ tr:hover td{background:#f3f4f6!important}button{transition:all .15s}button:hover
 
   {/* Image */}
   <div style={{background:"#ffffff",border:"1px solid #e5e7eb",borderRadius:10,marginBottom:18,padding:"18px 20px"}}>
-    <label style={lbl}>Image Path <span style={{fontWeight:400,textTransform:"none",color:"#9ca3af"}}>(relative to cdn.cireta.com/cireta-home/)</span></label>
-    <input style={{...inp,fontFamily:"'JetBrains Mono',monospace",fontSize:13}} placeholder="insights/my-blog-slug.webp" value={post.imgUrl} onChange={e=>setPost(p=>({...p,imgUrl:e.target.value}))}/>
-    <div style={{fontSize:11,color:"#9ca3af",marginTop:6,lineHeight:1.5}}>
-      Upload image to GCS bucket <code style={{color:"#6b7280"}}>cdn.cireta.com/cireta-home/insights/</code>, then paste the relative path. Full URL: <span style={{color:"#6b7280",wordBreak:"break-all"}}>{imgUrl||"(not set)"}</span>
-    </div>
-    {imgUrl&&<div style={{marginTop:14,borderRadius:10,overflow:"hidden",border:"1px solid #e5e7eb",background:"#ffffff",maxWidth:420}}>
-      <div style={{aspectRatio:"1592/896"}}>
-        <img src={imgUrl} style={{width:"100%",height:"100%",objectFit:"cover"}} alt="preview" onError={e=>{e.target.style.display="none";}}/>
-      </div>
-    </div>}
+    <label style={lbl}>Cover Image</label>
+    <ImageUploader
+      value={post.imgUrl}
+      onChange={(rel) => setPost(p => ({...p, imgUrl: rel}))}
+      slug={post.slug || post.title}
+      onFlash={flash}
+    />
   </div>
 
   {/* Excerpt */}
@@ -953,6 +1178,8 @@ tr:hover td{background:#f3f4f6!important}button{transition:all .15s}button:hover
           onUpdate={handleEditorUpdate}
           showSource={showSource}
           onToggleSource={()=>setShowSource(s=>!s)}
+          slug={post.slug || post.title}
+          onFlash={flash}
         />
       </EditorErrorBoundary>
     </div>
